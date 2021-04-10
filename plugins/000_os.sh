@@ -13,19 +13,6 @@ case "$OS_NAME" in
 		;;
 esac
 
-# --== ls ==--
-
-# use readable ls colors
-if [ "$IS_LINUX" ]; then
-	alias ls='ls -AF --color=auto'
-	export LS_COLORS="ow=30;42"
-else
-	alias ls='ls -AFG'
-fi
-if [ "$IS_MACOSX" ]; then
-	export LSCOLORS="ExGxBxDxCxEgedabagacad"
-fi
-
 # --== start ==--
 
 # open a UI browser for the specified folder using 'start'

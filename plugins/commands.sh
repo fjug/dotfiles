@@ -1,3 +1,19 @@
+# --== basics ==--
+
+if [ "$IS_LINUX" ]; then
+  alias ll='ls -l --color=auto'
+  alias la='ls -la --color=auto'
+  alias lt='ls -lat --color=auto'
+	export LS_COLORS="ow=30;42"
+else
+  alias ll='ls -l --color=auto'
+  alias la='ls -la --color=auto'
+  alias lt='ls -lat --color=auto'
+fi
+if [ "$IS_MACOSX" ]; then
+	export LSCOLORS="ExGxBxDxCxEgedabagacad"
+fi
+
 # --== git ==--
 
 # alias some common git typos
@@ -101,9 +117,3 @@ fi
 
 # remove tabs from files using 'detab'
 alias detab="sedi -e 's/	/  /g'"
-
-# --== gravatars ==--
-
-gravhash() {
-	php -r "echo md5(strtolower(trim('$@'))) . \"\n\";"
-}
