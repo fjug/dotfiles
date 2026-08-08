@@ -30,6 +30,38 @@ is_macos() { [ "$OS" = macos ]; }
 is_linux() { [ "$OS" = linux ]; }
 has()      { command -v "$1" >/dev/null 2>&1; }
 
+# Put brew on PATH for the current script, wherever it landed. Each install
+# script runs in its own process, so this has to be re-done rather than
+# inherited from the one before.
+load_brew() {
+  has brew && return 0
+  local p
+  for p in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+    [ -x "$p" ] && eval "$("$p" shellenv)" && return 0
+  done
+  return 1
+}
+
+# Path of the zsh we want as the login shell: Homebrew's if it exists,
+# otherwise whatever the system provides.
+preferred_zsh() {
+  local p
+  for p in "${HOMEBREW_PREFIX:-/opt/homebrew}/bin/zsh" /usr/local/bin/zsh \
+           /home/linuxbrew/.linuxbrew/bin/zsh /bin/zsh /usr/bin/zsh; do
+    [ -x "$p" ] && { echo "$p"; return 0; }
+  done
+  command -v zsh 2>/dev/null
+}
+
+# The login shell recorded for this user, not the one currently running.
+current_login_shell() {
+  if is_macos; then
+    dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}'
+  else
+    getent passwd "$USER" 2>/dev/null | cut -d: -f7
+  fi
+}
+
 # Linux package manager, if we can find one.
 linux_pkg_mgr() {
   for m in apt-get dnf pacman zypper; do

@@ -24,8 +24,9 @@ git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles && ~/.dotfiles/boots
 2. **symlinks** — links every config into `$HOME`, backing up anything real it
    finds in the way
 3. **python** — installs uv, managed Python 3.11/3.12/3.13, and the global tools
-4. **shell** — offers to make zsh the login shell, then pre-fetches the zsh
-   plugins so your first real terminal doesn't stall
+4. **shell** — offers to make Homebrew's zsh the login shell (`chsh` will ask
+   for your password), then pre-fetches the zsh plugins so your first real
+   terminal doesn't stall
 
 Budget 10–20 minutes, most of it MacTeX. Then open a new terminal (or
 `exec zsh`) and the prompt is up.
@@ -107,9 +108,19 @@ gh auth login
 
 ```bash
 exec zsh
+zsh --version                  # expect Homebrew's, not /bin/zsh's
+dscl . -read ~/ UserShell      # should be $(brew --prefix)/bin/zsh
 which starship uv eza bat rg fd fzf zoxide delta lazygit
 uv python list
 git config --get user.email
+```
+
+If the login shell didn't take, do it by hand — `chsh` needs your password and
+can't be scripted:
+
+```bash
+sudo sh -c 'echo "$(brew --prefix)/bin/zsh" >> /etc/shells'
+chsh -s "$(brew --prefix)/bin/zsh"
 ```
 
 ### Before wiping the old machine

@@ -5,8 +5,13 @@
 # pinned, so a fresh install always lands on current releases.
 
 # --- shell ------------------------------------------------------------------
-brew "starship"                 # prompt (replaces the oh-my-zsh bira_conda theme)
+# Homebrew's zsh rather than Apple's: currently 5.9.2 against the system's 5.9,
+# native arm64 instead of a universal binary, and it tracks upstream releases
+# instead of waiting for a macOS point update. bootstrap.sh offers to make it
+# the login shell.
+brew "zsh"
 brew "zsh-completions"
+brew "starship"                 # prompt (replaces the oh-my-zsh bira_conda theme)
 
 # --- modern CLI core --------------------------------------------------------
 brew "eza"                      # ls

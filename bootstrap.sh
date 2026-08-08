@@ -41,11 +41,25 @@ bash "$DOTFILES/install/python-uv.sh"
 
 # 4. shell ---------------------------------------------------------------------
 info "step 4/4 — shell"
-if [ "$(basename "${SHELL:-}")" != zsh ]; then
-  zsh_path="$(command -v zsh)"
-  if confirm "Make zsh ($zsh_path) the login shell?"; then
+load_brew || true
+
+# Compares full paths, not just the shell name: on macOS the login shell is
+# already /bin/zsh, and the point here is to move to the newer Homebrew build.
+zsh_path="$(preferred_zsh)"
+login_shell="$(current_login_shell)"
+login_shell="${login_shell:-${SHELL:-unknown}}"
+
+if [ -z "$zsh_path" ]; then
+  warn "no zsh found — skipping login shell setup"
+elif [ "$login_shell" = "$zsh_path" ]; then
+  ok "login shell is already $zsh_path"
+else
+  zsh_ver="$("$zsh_path" --version 2>/dev/null | awk '{print $2}')"
+  info "login shell is $login_shell; $zsh_path is zsh $zsh_ver"
+  if confirm "Switch the login shell to $zsh_path?"; then
     grep -qxF "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
-    chsh -s "$zsh_path"
+    # chsh asks for your password; it cannot be scripted away.
+    chsh -s "$zsh_path" && ok "login shell set — takes effect in a new terminal"
   fi
 fi
 

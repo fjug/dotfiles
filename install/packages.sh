@@ -20,9 +20,7 @@ if ! has brew; then
 fi
 
 # Make brew visible in this script's shell regardless of where it landed.
-for p in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
-  [ -x "$p" ] && eval "$("$p" shellenv)" && break
-done
+load_brew || true
 
 # --- macOS / Linuxbrew path --------------------------------------------------
 if has brew; then
@@ -44,6 +42,14 @@ if has brew; then
   brew upgrade
 
   brew cleanup
+
+  # `$(brew --prefix)/share` ships group-writable, which makes compinit flag
+  # every Homebrew completion directory as insecure and prompt on the first
+  # interactive shell. Homebrew's own documented fix.
+  if [ -d "$(brew --prefix)/share" ]; then
+    chmod go-w "$(brew --prefix)/share" 2>/dev/null || true
+  fi
+
   ok "Homebrew done"
   exit 0
 fi
