@@ -1,103 +1,58 @@
-# Setting up a new Mac
+# Before wiping the old machine
 
-Order matters a little: packages before symlinks (so the shell config finds the
-tools it expects), symlinks before the first new terminal.
+The install steps live in the [README](../README.md). This page is the other
+half: what is deliberately *not* in this repo and therefore has to come across
+by hand.
 
-## 0. Before wiping the old machine
+## Secrets and keys
 
-Things that are not, and should not be, in this repo:
-
-- [ ] `~/.ssh/` — keys (`id_rsa`, `ht`, `jugf.pem`) and `config`.
-      Copy over an encrypted channel, then `chmod 600 ~/.ssh/*`.
-      **Also**: the old `~/.ssh` accumulated plaintext secrets
-      (`ngrok_recovery_codes.txt`, `Matrix_security-key.txt`, a Google
-      `client_secret_*.json`). Move those into a password manager rather than
-      copying them to the new disk.
-- [ ] `~/.config/gh/hosts.yml` — or just run `gh auth login` again.
-- [ ] `mas list` output, if you want the App Store apps back by ID.
-- [ ] Any conda environment you still need — see [conda-to-uv.md](conda-to-uv.md).
+- [ ] `~/.ssh/` — the keys (`id_rsa`, `ht`, `jugf.pem`) and your real `config`.
+      Move them over an encrypted channel, then `chmod 600 ~/.ssh/*`.
+- [ ] **The plaintext secrets that accumulated in `~/.ssh`** —
+      `ngrok_recovery_codes.txt`, `Matrix_security-key.txt`,
+      `Recovery_HT_BioRender_Authenticator.txt`, and a Google
+      `client_secret_*.json`. These belong in a password manager, not on the
+      new disk.
+- [ ] `~/.config/gh/hosts.yml` — or simply run `gh auth login` again.
 - [ ] Licence files: Gurobi (`gurobi.lic`), Adobe, TeamViewer, iStat Menus.
-- [ ] `~/GIT` and `~/git` — check for uncommitted or unpushed work:
-      `for d in ~/GIT/*/; do git -C "$d" status --short --branch; done`
 
-## 1. Bootstrap
+## Work you might lose
 
-```bash
-xcode-select --install
-git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles
-~/.dotfiles/bootstrap.sh
-```
+- [ ] Uncommitted or unpushed changes in your repo directories:
 
-That installs Homebrew, the `Brewfile` baseline, symlinks every config, and
-sets up uv with managed Python 3.11/3.12/3.13 plus the global tools.
+      for d in ~/GIT/*/ ~/git/*/; do git -C "$d" status --short --branch; done
 
-Then open a new terminal (or `exec zsh`). The zsh plugins clone themselves on
-first start.
+- [ ] Any conda environment you still need. `--from-history` gives you what you
+      actually asked for rather than the full dependency closure:
 
-## 2. GUI applications
+      conda env export --from-history -n <env>
 
-`Brewfile.apps` mirrors what was on the old machine. Read it first — it is an
-inventory, not a recommendation — then:
+      See [conda-to-uv.md](conda-to-uv.md) for translating it into a uv project.
 
-```bash
-brew bundle --file=~/.dotfiles/Brewfile.apps
-```
+- [ ] Mac App Store apps, if you want them back by ID:
 
-A handful aren't available as casks (Trello, FileZilla Pro, reMarkable, VMware
-Horizon, kDrive, institute-managed apps, App Store apps). They're listed at the
-bottom of that file.
+      brew install mas && mas list
 
-## 3. macOS preferences
+## Settings with no file to copy
 
-```bash
-~/.dotfiles/install/macos-defaults.sh
-```
+- [ ] **Terminal.app profile** — never was in git. Export it from
+      Terminal → Settings → Profiles → Export if you want it, or take the
+      opportunity to move to Ghostty/iTerm2.
+- [ ] **Karabiner-Elements** — `~/.config/karabiner` exists on the old machine
+      but the app itself is gone. Stale; deliberately not carried over.
+- [ ] **Spectacle** — unmaintained for years. `Brewfile.apps` lists Rectangle,
+      its successor, instead. Its shortcuts will need setting up again.
 
-Opt-in and worth reading first. Sets fast key repeat, disables press-and-hold
-(so vim's `hjkl` repeat), turns off smart quotes, and tidies Finder/Dock.
-Log out and back in afterwards for the keyboard settings.
+## Applications that aren't casks
 
-## 4. SSH
+Everything else in `Brewfile.apps` installs itself. These don't:
 
-```bash
-cp ~/.dotfiles/ssh/config.example ~/.ssh/config
-chmod 600 ~/.ssh/config
-$EDITOR ~/.ssh/config          # fill in hostnames
-ssh-add --apple-use-keychain ~/.ssh/id_ed25519
-```
-
-If you're generating a fresh key rather than copying: `ssh-keygen -t ed25519`,
-then add the public half to GitHub and to the HPC/VDI hosts.
-
-## 5. Things that stay manual
-
-- **Terminal**: the old machine used Terminal.app with no saved profile in git.
-  If you want a nicer one, `brew install --cask ghostty` or `iterm2`.
-- **Karabiner-Elements**: `~/.config/karabiner` existed on the old machine but
-  the app itself was gone — stale config, deliberately not carried over.
-- **Gurobi**: install, then drop `gurobi.lic` in place. `zsh/10-path.zsh` finds
-  any `/Library/gurobi*` automatically, so no version pinning to update.
-- **Adobe CC / Office / institute VPN**: sign in per app.
-
-## Afterwards
-
-Check the shell is healthy:
-
-```bash
-exec zsh
-which starship uv eza bat rg fd fzf zoxide delta lazygit
-uv python list
-git config --get user.email
-```
-
-## Keeping the two machines in sync
-
-```bash
-dotfiles-sync              # git pull + re-link
-dotfiles-update-plugins    # pull each zsh plugin
-brew update && brew upgrade && brew bundle --file=~/.dotfiles/Brewfile
-uv tool upgrade --all
-```
-
-If you add a package on one machine, add it to `Brewfile` and commit — that's
-what keeps the two from drifting.
+| | |
+|---|---|
+| Trello | trello.com/platforms |
+| FileZilla Pro | purchased, via filezilla-project.org |
+| reMarkable desktop | remarkable.com/software |
+| VMware Horizon Client | institute VDI |
+| kDrive (Infomaniak) | infomaniak.com/en/apps/download-kdrive |
+| HT Self Service, FortiClient, Avaya Workplace | institute-managed |
+| Publish or Perish, Speechify, GoodNotes, Kindle | Mac App Store |
