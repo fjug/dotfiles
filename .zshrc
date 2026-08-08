@@ -55,7 +55,7 @@ plugins=(z ssh-agent git brew history history-substring-search colored-man-pages
 
 # User configuration
 
-export PATH="/Users/jug/bin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/3.0.0/bin:$PATH"
+export PATH="/Users/florian.jug/bin:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/3.0.0/bin:$PATH"
 
 source $ZSH/oh-my-zsh.sh
 
@@ -86,14 +86,14 @@ bindkey "^S" history-incremental-pattern-search-forward
 
 # CONDA
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$('/Users/florian.jug/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "$HOME/miniconda3/etc/profile.d/conda.sh"
+    if [ -f "/Users/florian.jug/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/Users/florian.jug/miniconda3/etc/profile.d/conda.sh"
     else
-        export PATH="$HOME/miniconda3/bin:$PATH"
+        export PATH="/Users/florian.jug/miniconda3/bin:$PATH"
     fi
 fi
 unset __conda_setup
@@ -122,3 +122,10 @@ function git-latexdiff {
 # Homebrew related
 export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
+
+# Gurobi
+export PATH="/Library/gurobi951/macos_universal2/bin:$PATH"
+
+
+export PATH="$HOME/reMarkable/bin:$PATH"
+export PATH="$HOME/Kobo/bin:$PATH"
