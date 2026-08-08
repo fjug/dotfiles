@@ -71,18 +71,32 @@ Log out and back in afterwards for the keyboard settings to take effect.
 
 ### 4. SSH
 
-The only genuinely manual part. Copy `~/.ssh/id_rsa` and `~/.ssh/ht` across
-over an encrypted channel — AirDrop or a USB stick, not email — then:
+The only genuinely manual part. Copy the private keys across over an encrypted
+channel — AirDrop or a USB stick, not email. **`ht` is the key that matters**:
+it's what the HPC, VDI and deNBI hosts know, it's what GitHub authenticates
+with, and it's the one `ssh/config.example` points at. `id_rsa` is a 2048-bit
+key from an older laptop that nothing currently references.
 
 ```bash
-chmod 600 ~/.ssh/id_rsa ~/.ssh/ht
-cp ~/.dotfiles/ssh/config.example ~/.ssh/config && chmod 600 ~/.ssh/config
+cp ~/.dotfiles/ssh/config.example ~/.ssh/config
 $EDITOR ~/.ssh/config                        # fill in the hostnames
-ssh-add --apple-use-keychain ~/.ssh/id_rsa
+~/.dotfiles/install/ssh-setup.sh             # perms + load keys into the keychain
 ```
 
-If you'd rather generate a fresh key: `ssh-keygen -t ed25519`, then add the
-public half to GitHub and to the HPC/VDI hosts.
+`ssh-setup.sh` fixes the permissions on `~/.ssh` and adds **every** private key
+it finds — `ht`, `id_rsa`, `id_ed25519` — to the agent with
+`--apple-use-keychain`, so passphrases are stored once and never asked for
+again. By hand it would be:
+
+```bash
+chmod 700 ~/.ssh && chmod 600 ~/.ssh/ht ~/.ssh/id_rsa ~/.ssh/config
+ssh-add --apple-use-keychain ~/.ssh/ht ~/.ssh/id_rsa
+ssh-add -l                                   # confirm both are loaded
+```
+
+If you'd rather start fresh — worth considering, since every current key is RSA
+from 2021 — `ssh-keygen -t ed25519 -C "florian.jug@fht.org"`, then add the
+public half to GitHub and to the HPC/VDI/deNBI hosts before retiring `ht`.
 
 Now switch this repo's remote to SSH:
 

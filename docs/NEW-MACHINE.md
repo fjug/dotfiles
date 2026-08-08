@@ -6,8 +6,17 @@ by hand.
 
 ## Secrets and keys
 
-- [ ] `~/.ssh/` — the keys (`id_rsa`, `ht`, `jugf.pem`) and your real `config`.
-      Move them over an encrypted channel, then `chmod 600 ~/.ssh/*`.
+- [ ] `~/.ssh/` — the keys and your real `config`. Move them over an encrypted
+      channel, then run `install/ssh-setup.sh` on the new machine to fix
+      permissions and load them into the keychain.
+
+      **`ht` is the one that matters** — 3072-bit RSA, referenced five times in
+      your config, the only key the agent holds, and what the HPC, VDI and
+      deNBI hosts plus GitHub authenticate against. It has no passphrase.
+      `id_rsa` (2048-bit, comment `jug@myers-mac-8.local`, passphrase-protected)
+      is from an older laptop and nothing references it. `jugf.pem`/`.ppk` is an
+      AWS/PuTTY pair with no config entry. Carry `ht`; decide deliberately about
+      the other two rather than copying them by reflex.
 - [ ] **The plaintext secrets that accumulated in `~/.ssh`** —
       `ngrok_recovery_codes.txt`, `Matrix_security-key.txt`,
       `Recovery_HT_BioRender_Authenticator.txt`, and a Google

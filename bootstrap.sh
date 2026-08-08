@@ -74,9 +74,10 @@ cat <<NEXT
 
   Still to do by hand:
     - open a new terminal (or: exec zsh)
-    - ssh keys: copy ~/.ssh/id_ed25519 + ~/.ssh/ht across, then
+    - ssh: copy your private keys across (ht is the one that matters — it is
+      what the HPC/VDI/deNBI hosts and GitHub know), then
         cp $DOTFILES/ssh/config.example ~/.ssh/config   # and edit
-        ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+        $DOTFILES/install/ssh-setup.sh                  # perms + load keys
     - gh auth login
     - GUI apps:  brew bundle --file=$DOTFILES/Brewfile.apps
     - macOS prefs: $DOTFILES/install/macos-defaults.sh

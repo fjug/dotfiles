@@ -21,14 +21,16 @@ Host *
     HashKnownHosts yes
 
 # --- institute ---------------------------------------------------------------
+# `ht` is the key these hosts know. It is also what GitHub authenticates with.
 Host HPC
     HostName hpclogin.<your-domain>
     User <username>
-    # IdentityFile ~/.ssh/ht
+    IdentityFile ~/.ssh/ht
 
-Host VDI
+Host VDI VDI8
     HostName <internal-ip>
     User <username>
+    IdentityFile ~/.ssh/ht
 
 # --- compute -----------------------------------------------------------------
 Host denbi
@@ -38,6 +40,13 @@ Host denbi
     IdentityFile ~/.ssh/ht
     # Then `ssh denbi` replaces the long command, and for the notebook tunnel:
     LocalForward 8888 localhost:8888
+
+# Cloud GPU boxes come and go; keep the current one here rather than as a
+# shell alias, so the key and user live in one place.
+# Host gpu
+#     HostName <ip>
+#     User ubuntu
+#     IdentityFile ~/.ssh/ht
 
 # --- devices -----------------------------------------------------------------
 Host remarkable
@@ -50,4 +59,6 @@ Host remarkable
 # --- git hosting -------------------------------------------------------------
 Host github.com
     User git
-    IdentityFile ~/.ssh/id_ed25519
+    IdentityFile ~/.ssh/ht
+    # Switch this to ~/.ssh/id_ed25519 once you have generated a modern key and
+    # registered its public half at https://github.com/settings/keys
