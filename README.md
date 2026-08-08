@@ -20,30 +20,48 @@ git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles && ~/.dotfiles/boots
 
 `bootstrap.sh` asks for confirmation once, then runs four steps:
 
-1. **packages** — installs Homebrew, then everything in `Brewfile`
-2. **symlinks** — links every config into `$HOME`, backing up anything real it
-   finds in the way
+1. **symlinks** — links every config into `$HOME`, backing up anything real it
+   finds in the way. First on purpose: it's instant, needs no network, and means
+   you end up with a working shell even if every download afterwards fails
+2. **packages** — installs the Xcode Command Line Tools (waiting for them to
+   finish), Homebrew, then everything in `Brewfile`
 3. **python** — installs uv, managed Python 3.11/3.12/3.13, and the global tools
 4. **shell** — offers to make Homebrew's zsh the login shell (`chsh` will ask
    for your password), then pre-fetches the zsh plugins so your first real
    terminal doesn't stall
 
-Budget 10–20 minutes, most of it MacTeX. Then open a new terminal (or
-`exec zsh`) and the prompt is up.
+**The steps are independent.** A failure in one doesn't abort the others; the
+summary at the end lists what broke and the exact command to re-run just that
+piece. Budget 5–10 minutes. Then open a new terminal (or `exec zsh`).
 
-Two switches, if you want it unattended:
+Switches:
 
 ```bash
 DOTFILES_YES=1  ~/.dotfiles/bootstrap.sh     # ask nothing, assume yes
 DOTFILES_APPS=1 ~/.dotfiles/bootstrap.sh     # also install the GUI apps
+DOTFILES_TEX=1  ~/.dotfiles/bootstrap.sh     # also install MacTeX (6.4 GB)
 ```
 
 Skip `DOTFILES_APPS` on the first run and read `Brewfile.apps` first — it is an
 inventory of the old machine's `/Applications`, not a recommendation, and it is
-a large download.
+a large download. MacTeX is not in the baseline for the same reason.
 
 The whole thing is idempotent. Re-running it on a machine that's already set up
 is a no-op, so it's also the way to pick up changes later.
+
+### If something didn't work
+
+```bash
+~/.dotfiles/install/doctor.sh
+```
+
+Read-only. It checks symlinks, Homebrew, PATH, every tool, uv, the login shell,
+zsh plugins and ssh, and prints the fix for each gap it finds.
+
+The most common confusion it resolves: tools *are* installed, but the shell
+can't see them because `~/.zshenv` wasn't in place when it started, so
+`/opt/homebrew/bin` never made it onto `PATH`. Run `link.sh` and open a new
+terminal.
 
 ### 2. GUI applications
 
@@ -172,7 +190,9 @@ install/
   lib.sh              shared helpers (logging, platform detection, linking)
   packages.sh         Homebrew, or a Linux package-manager fallback
   python-uv.sh        uv, managed interpreters, global tools
+  ssh-setup.sh        ~/.ssh permissions + load keys into the agent
   macos-defaults.sh   system preferences (opt-in, read before running)
+  doctor.sh           read-only diagnosis of what's missing, and how to fix it
 zsh/                  the actual shell config, sourced in numeric order
   00-options.zsh      history, globbing, directory stack
   10-path.zsh         PATH, Homebrew shellenv, optional tool dirs

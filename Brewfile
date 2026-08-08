@@ -50,8 +50,19 @@ brew "librsvg"
 
 # --- casks ------------------------------------------------------------------
 cask "meld"                     # GUI diff/merge, wired up in .gitconfig
-cask "mactex"                   # LaTeX (large — comment out for a slim box)
 cask "claude-code"
 cask "ngrok"
 cask "qlmarkdown"               # Quick Look for Markdown
 cask "ttscoff-mmd-quicklook"    # Quick Look for MultiMarkdown
+
+# --- deliberately NOT here ---------------------------------------------------
+# MacTeX is a 6.4 GB download. Having it in the baseline meant a slow or
+# interrupted connection took the whole bootstrap down with it. Install it
+# when you want it:
+#
+#   brew install --cask mactex          # full TeX Live + GUI apps
+#   brew install --cask mactex-no-gui   # same TeX, no TeXShop/BibDesk/LaTeXiT
+#   brew install --cask basictex        # ~100 MB, add packages with tlmgr
+#
+# or pass DOTFILES_TEX=1 to bootstrap.sh. `git-latexdiff` needs latexdiff and
+# pdflatex, so basictex users want: sudo tlmgr install latexdiff

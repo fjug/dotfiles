@@ -54,12 +54,21 @@ preferred_zsh() {
 }
 
 # The login shell recorded for this user, not the one currently running.
+# Keyed on the directory-service user record, NOT on $HOME: those are usually
+# the same path, but when they aren't, dscl returns "Invalid Path" and the
+# caller would wrongly conclude the login shell needs changing.
 current_login_shell() {
+  local u shell
+  u="$(id -un)"
   if is_macos; then
-    dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}'
+    shell="$(dscl . -read "/Users/$u" UserShell 2>/dev/null | awk '{print $2}')"
   else
-    getent passwd "$USER" 2>/dev/null | cut -d: -f7
+    shell="$(getent passwd "$u" 2>/dev/null | cut -d: -f7)"
   fi
+  case "$shell" in
+    /*) echo "$shell" ;;      # only trust an absolute path
+    *)  echo "${SHELL:-}" ;;
+  esac
 }
 
 # Linux package manager, if we can find one.
