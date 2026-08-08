@@ -1,6 +1,11 @@
-.oh-my-zsh
+# vim plugin bundles — cloned by the vim setup, not tracked here
 .vim/bundle/Vundle.vim
 .vim/bundle/nerdcommenter
 .vim/bundle/vim-airline
 .vim/bundle/vim-sensible
 
+# leftovers from the pre-2026 layout, kept on disk for a while as a fallback
+.oh-my-zsh
+
+.DS_Store
+*.swp

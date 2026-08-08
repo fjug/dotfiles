@@ -1,97 +1,145 @@
-[alias]
-	# shortcuts
-	br = branch
-	co = checkout
-	cm = cherry -v master
-	cp = cherry-pick
-	cpo = cherry-pick --strategy=recursive --strategy-option=ours
-	cpt = cherry-pick --strategy=recursive --strategy-option=theirs
-	cl = clone
-	ci = commit
-	cia = commit --amend
-	conflicts = diff --name-only --diff-filter=U
-	db = diff-blame
-	di = diff
-	dif = diff
-	dic = diff --color-words
-	dis = diff --staged
-	disc = diff --staged --color-words
-	fa = !git fetch --all --prune && git fetch --all --tags
-	fb = filter-branch -f --prune-empty
-	fbs = filter-branch -f --prune-empty --subdirectory-filter
-	fbt = filter-branch -f --prune-empty --tree-filter
-	graph = log --date-order --graph --decorate --oneline
-	lns = log --name-status
-	follow = log --name-status --follow
-	ff = merge --ff 'HEAD@{u}'
-	ffs = !git stash && git ff && git pop
-	ls = ls-files
-	move = mv
-	ren = mv
-	rename = mv
-	pl = pull
-	prb = pull --rebase
-	ps = !fix-github-remotes && git push
-	psf = push --force
-	ra = rebase --abort
-	rc = rebase --continue
-	ri = rebase -i
-	ri1 = rebase -i HEAD~1
-	ri2 = rebase -i HEAD~2
-	ri3 = rebase -i HEAD~3
-	ri4 = rebase -i HEAD~4
-	ri5 = rebase -i HEAD~5
-	ri6 = rebase -i HEAD~6
-	ri7 = rebase -i HEAD~7
-	ri8 = rebase -i HEAD~8
-	ri9 = rebase -i HEAD~9
-	rs = !git stash && git rebase 'HEAD@{u}' && git pop
-	ws = rebase --whitespace=strip
-	ru = remote update --prune
-	rhup = reset --hard 'HEAD@{u}'
-	pop = stash pop --index
-	st = status
-
-	fix = !fixup-rebase
-	ghr = "!ghr() { git remote set-url origin git://github.com/$1 && git remote set-url --push origin git@github.com:$1; }; ghr"
-	pack = !git reset --hard && git for-each-ref --format='%(refname)' refs/original/ | xargs -n 1 git update-ref -d && git reflog expire --expire=now --all && git gc --aggressive --prune=now
-	spop = !git checkout 'stash^{tree}' -- . && git stash drop
-
-[core]
-	pager = less -r
-
-[diff]
-	color = auto
-
-[push]
-	default = upstream
-
-[ui]
-	color = auto
-
 [user]
 	name = Florian Jug
 	email = florian.jug@fht.org
 
+[init]
+	defaultBranch = main
+
+[core]
+	excludesfile = ~/.gitignore_global
+	editor = vim
+	autocrlf = input
+
+[color]
+	ui = auto
+
+[push]
+	default = simple
+	autoSetupRemote = true
+	followTags = true
+
+[pull]
+	rebase = true
+
+[fetch]
+	prune = true
+	pruneTags = true
+
 [rebase]
 	autosquash = true
+	autostash = true
+
+[merge]
+	conflictstyle = zdiff3
+	tool = meld
+
+[rerere]
+	enabled = true
 
 [diff]
-  tool = meld
+	colorMoved = zebra
+	algorithm = histogram
+	tool = meld
+
+[branch]
+	sort = -committerdate
+
+[help]
+	autocorrect = prompt
+
+# --- delta: syntax-highlighted diffs in the pager ---------------------------
+# Falls back gracefully: if delta is not installed git just uses less.
+[pager]
+	diff = delta
+	log = delta
+	reflog = delta
+	show = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = false
+	hyperlinks = true
+
+# --- GUI diff/merge with Meld ------------------------------------------------
+# The `open -W -a` form is macOS; on Linux Meld is on $PATH and git finds it
+# without any of this.
 [difftool]
-  prompt = false
+	prompt = false
 [difftool "meld"]
-  trustExitCode = true
-  cmd = open -W -a Meld --args \"$LOCAL\" \"$PWD/$REMOTE\"
-[merge]
-  tool = meld
+	trustExitCode = true
+	cmd = open -W -a Meld --args \"$LOCAL\" \"$PWD/$REMOTE\"
 [mergetool]
-  prompt = false
+	prompt = false
+	keepBackup = false
 [mergetool "meld"]
-  trustExitCode = true
-  cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
+	trustExitCode = true
+	cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
+
 [filter "lfs"]
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
+
+[alias]
+	# --- status / inspection ---
+	st = status
+	ls = ls-files
+	conflicts = diff --name-only --diff-filter=U
+	graph = log --date-order --graph --decorate --oneline
+	lns = log --name-status
+	follow = log --name-status --follow
+	last = log -1 HEAD --stat
+
+	# --- diffs ---
+	di = diff
+	dic = diff --color-words
+	dis = diff --staged
+	disc = diff --staged --color-words
+
+	# --- branching / checkout ---
+	br = branch
+	co = checkout
+	sw = switch
+	swc = switch -c
+	cm = cherry -v main
+
+	# --- committing ---
+	ci = commit
+	cia = commit --amend
+	cp = cherry-pick
+	cpo = cherry-pick --strategy=recursive --strategy-option=ours
+	cpt = cherry-pick --strategy=recursive --strategy-option=theirs
+
+	# --- syncing ---
+	fa = !git fetch --all --prune && git fetch --all --tags
+	ff = merge --ff 'HEAD@{u}'
+	ffs = !git stash && git ff && git pop
+	pl = pull
+	prb = pull --rebase
+	ps = push
+	psf = push --force-with-lease
+	ru = remote update --prune
+	rhup = reset --hard 'HEAD@{u}'
+
+	# --- rebasing ---
+	ri = rebase -i
+	ra = rebase --abort
+	rc = rebase --continue
+	rs = !git stash && git rebase 'HEAD@{u}' && git pop
+	ws = rebase --whitespace=strip
+	# `git ri5` etc. still work, but `git rn 5` covers every depth.
+	rn = "!f() { git rebase -i HEAD~${1:-1}; }; f"
+
+	# --- stash ---
+	pop = stash pop --index
+	spop = !git checkout 'stash^{tree}' -- . && git stash drop
+
+	# --- housekeeping ---
+	fb = filter-branch -f --prune-empty
+	pack = !git reset --hard && git for-each-ref --format='%(refname)' refs/original/ | xargs -n 1 git update-ref -d && git reflog expire --expire=now --all && git gc --aggressive --prune=now
+	ghr = "!ghr() { git remote set-url origin https://github.com/$1 && git remote set-url --push origin git@github.com:$1; }; ghr"

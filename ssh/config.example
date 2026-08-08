@@ -1,0 +1,53 @@
+# Template for ~/.ssh/config.
+#
+# The real config is NOT in this repo on purpose — it contains internal
+# hostnames and addresses. Copy this, fill in the blanks, and keep it local:
+#
+#   cp ~/.dotfiles/ssh/config.example ~/.ssh/config
+#   chmod 600 ~/.ssh/config
+#
+# Keys themselves never belong in a git repo. Move them across from the old
+# machine over an encrypted channel and `chmod 600` them.
+
+# --- global defaults ---------------------------------------------------------
+Host *
+    AddKeysToAgent yes
+    # macOS only: remembers passphrases in the login keychain, so nothing
+    # needs typing. Harmless to leave in on Linux with IgnoreUnknown.
+    IgnoreUnknown UseKeychain
+    UseKeychain yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    HashKnownHosts yes
+
+# --- institute ---------------------------------------------------------------
+Host HPC
+    HostName hpclogin.<your-domain>
+    User <username>
+    # IdentityFile ~/.ssh/ht
+
+Host VDI
+    HostName <internal-ip>
+    User <username>
+
+# --- compute -----------------------------------------------------------------
+Host denbi
+    HostName <ip>
+    Port <port>
+    User ubuntu
+    IdentityFile ~/.ssh/ht
+    # Then `ssh denbi` replaces the long command, and for the notebook tunnel:
+    LocalForward 8888 localhost:8888
+
+# --- devices -----------------------------------------------------------------
+Host remarkable
+    HostName 10.11.99.1
+    User root
+    # The tablet regenerates its host key on firmware updates.
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+# --- git hosting -------------------------------------------------------------
+Host github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519

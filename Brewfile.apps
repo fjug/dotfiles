@@ -1,0 +1,93 @@
+# Brewfile.apps — GUI applications.
+#
+#   brew bundle --file=Brewfile.apps
+#
+# On the old machine essentially all of these were installed by hand, by
+# downloading a .dmg. Every token below was checked to exist in homebrew-cask,
+# so on the new Mac they become one command and stay updatable with
+# `brew upgrade --cask`.
+#
+# Go through this before running it — it is your current /Applications, not a
+# recommendation. Comment out what you don't want to carry over.
+
+# --- editors & dev ----------------------------------------------------------
+cask "visual-studio-code"
+cask "cursor"
+cask "textmate"
+cask "intellij-idea-ce"
+cask "pycharm-ce"
+cask "docker"                   # Docker Desktop
+
+# --- AI ---------------------------------------------------------------------
+cask "claude"
+cask "chatgpt"
+
+# --- browsers ---------------------------------------------------------------
+cask "firefox"
+cask "google-chrome"
+cask "microsoft-edge"
+
+# --- science & writing ------------------------------------------------------
+cask "zotero"
+cask "fiji"                     # ImageJ/Fiji
+cask "skim"                     # PDF reader/annotator
+cask "inkscape"
+cask "drawio"
+cask "blender"
+cask "calibre"
+
+# --- communication ----------------------------------------------------------
+cask "slack"
+cask "signal"
+cask "whatsapp"
+cask "element"
+cask "mattermost"
+cask "zoom"
+cask "webex"
+cask "microsoft-teams"
+cask "gather"
+
+# --- productivity -----------------------------------------------------------
+cask "microsoft-office"
+cask "todoist"
+cask "busycal"
+cask "deepl"
+cask "default-folder-x"
+
+# --- window & menubar management --------------------------------------------
+# Note: Spectacle is on the old machine but has been unmaintained for years —
+# Rectangle is its successor and is the only one listed here.
+cask "rectangle"
+cask "alt-tab"
+cask "flycut"                   # clipboard history
+cask "hiddenbar"
+cask "istat-menus"
+
+# --- cloud & sync -----------------------------------------------------------
+cask "dropbox"
+cask "google-drive"
+cask "owncloud"
+cask "proton-mail"
+cask "proton-mail-bridge"
+cask "protonvpn"
+
+# --- media & misc -----------------------------------------------------------
+cask "vlc"
+cask "spotify"
+cask "steam"
+cask "adobe-creative-cloud"     # installs the CC app; the suite comes from there
+cask "teamviewer"
+cask "microsoft-remote-desktop"
+cask "appcleaner"               # clean uninstalls — worth having from day one
+
+# --- NOT available as casks: install by hand on the new machine --------------
+#   Trello                  https://trello.com/platforms
+#   FileZilla Pro           (purchased, via filezilla-project.org)
+#   reMarkable desktop      https://remarkable.com/software
+#   VMware Horizon Client   (institute VDI)
+#   kDrive (Infomaniak)     https://www.infomaniak.com/en/apps/download-kdrive
+#   HT Self Service, FortiClient, Avaya Workplace   (institute-managed)
+#   Publish or Perish, Speechify, GoodNotes, Kindle (Mac App Store)
+#
+# For the App Store ones: `brew install mas`, then `mas list` on the OLD
+# machine to get the IDs and `mas install <id>` on the new one.
