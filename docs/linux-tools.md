@@ -54,6 +54,6 @@ builds.
   in `~/.cache/bash-init/` (forks are expensive on the VDI when the user's
   0.98-CPU cgroup quota is busy). The installer clears it; delete it by hand
   if a tool is upgraded some other way.
-- Config files are linked by [`link-configs.sh`](link-configs.sh):
+- Config files are linked by [`link.sh`](../link.sh):
   `config/starship.toml` -> `~/.config/starship.toml`,
   `config/bat/config` -> `~/.config/bat/config`, `inputrc` -> `~/.inputrc`.

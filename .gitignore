@@ -1,8 +1,5 @@
-# vim plugin bundles — cloned by the vim setup, not tracked here
-.vim/bundle/Vundle.vim
-.vim/bundle/nerdcommenter
-.vim/bundle/vim-airline
-.vim/bundle/vim-sensible
+# vim plugin bundles — cloned by install/vim-plugins.sh, not tracked here
+.vim/bundle/
 
 # leftovers from the pre-2026 layout, kept on disk for a while as a fallback
 .oh-my-zsh

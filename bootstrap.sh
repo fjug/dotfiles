@@ -65,6 +65,11 @@ run_step "step 3/4 — python toolchain" \
          "bash $DOTFILES/install/python-uv.sh" \
          bash "$DOTFILES/install/python-uv.sh"
 
+# 3b. vim plugins --------------------------------------------------------------
+run_step "step 3b/4 — vim plugins" \
+         "bash $DOTFILES/install/vim-plugins.sh" \
+         bash "$DOTFILES/install/vim-plugins.sh"
+
 # 4. shell ---------------------------------------------------------------------
 echo
 info "step 4/4 — shell"

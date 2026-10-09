@@ -1,4 +1,4 @@
-# bat configuration (linked to ~/.config/bat/config by link-configs.sh).
+# bat configuration (linked to ~/.config/bat/config by link.sh).
 # Mirrors the Mac setup, which sets BAT_THEME=ansi in zsh/40-tools.zsh: the
 # 'ansi' theme uses the terminal's own palette, so it works on light and
 # dark backgrounds alike. Kept here as well so bat looks the same when it is

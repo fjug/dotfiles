@@ -1,5 +1,5 @@
 # ~/.inputrc — readline settings (bash, python REPL, ...), linked by
-# link-configs.sh. Bash translation of the Mac's zsh/20-completion.zsh and
+# link.sh. Bash translation of the Mac's zsh/20-completion.zsh and
 # zsh/70-keybindings.zsh plus ~/.dotfiles/.inputrc.
 
 # keep the system defaults (Home/End/PgUp keys, 8-bit input)

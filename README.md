@@ -30,6 +30,7 @@ install/
   linux-tools.sh  pinned, SHA-256-verified release binaries into ~/.local
   python-uv.sh    uv, managed interpreters, global tools
   ssh-setup.sh    ~/.ssh permissions, load keys into the agent
+  vim-plugins.sh  pathogen bundles under .vim/bundle/
   macos-defaults.sh
   doctor.sh       read-only diagnosis
 bootstrap.sh    one command for a new machine
