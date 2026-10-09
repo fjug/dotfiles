@@ -23,7 +23,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install zsh (Linux runners have no zsh)
         if: runner.os == 'Linux'
