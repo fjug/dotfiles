@@ -21,6 +21,9 @@ info "symlinks"
 for pair in \
   ".zshenv:$HOME/.zshenv" \
   ".zshrc:$HOME/.zshrc" \
+  ".bashrc:$HOME/.bashrc" \
+  ".bash_profile:$HOME/.bash_profile" \
+  ".inputrc:$HOME/.inputrc" \
   ".gitconfig:$HOME/.gitconfig" \
   ".vimrc:$HOME/.vimrc"
 do
@@ -110,6 +113,23 @@ else
   fail "login shell is $login_shell, not $zsh_path" \
        "sudo sh -c 'echo $zsh_path >> /etc/shells' && chsh -s $zsh_path"
 fi
+# bash: the config is shared, so it should load cleanly even though zsh is
+# the login shell.
+bash_path="${HOMEBREW_PREFIX:-/opt/homebrew}/bin/bash"
+[ -x "$bash_path" ] || bash_path="$(command -v bash)"
+bash_ver="$("$bash_path" --version 2>/dev/null | head -1 | sed -E 's/.*version ([0-9]+)\.([0-9]+).*/\1.\2/')"
+case "$bash_ver" in
+  3.*) fail "bash is $bash_ver ($bash_path) — macOS's 2007 build" \
+            "brew install bash" ;;
+  "")  fail "no bash found" "brew install bash" ;;
+  *)   pass "bash $bash_ver at $bash_path" ;;
+esac
+if "$bash_path" -ic 'exit' 2>&1 | grep -qiE 'error|not found|unbound'; then
+  fail "interactive bash reports errors" "$bash_path -ic exit   # to see them"
+else
+  pass "interactive bash starts clean"
+fi
+
 plugin_dir="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins"
 n=$(ls -1 "$plugin_dir" 2>/dev/null | wc -l | tr -d ' ')
 if [ "${n:-0}" -ge 4 ]; then

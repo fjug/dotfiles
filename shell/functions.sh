@@ -61,3 +61,19 @@ scratch() {
 dotfiles-sync() {
   command git -C "$DOTFILES" pull --ff-only && "$DOTFILES/link.sh"
 }
+
+# --- carried over from the Linux setup --------------------------------------
+
+# diff — use git's formatting (and delta, if configured) for ad-hoc diffs.
+# "$@" is quoted here; the Linux original used bare $@ and broke on paths
+# containing spaces.
+diff() { git diff --no-index "$@"; }
+
+# version — report what this OS actually is, whatever the OS is.
+version() {
+  command -v sw_vers    > /dev/null 2>&1 && sw_vers
+  [ -r /proc/version ]  && cat /proc/version
+  command -v lsb_release > /dev/null 2>&1 && lsb_release -a 2> /dev/null
+  [ -r /etc/redhat-release ] && cat /etc/redhat-release
+  return 0
+}

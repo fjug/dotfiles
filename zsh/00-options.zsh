@@ -26,10 +26,7 @@ setopt INTERACTIVE_COMMENTS    # allow `# comments` at the prompt
 setopt NO_BEEP
 unsetopt FLOW_CONTROL          # free up ^S / ^Q
 
-# Colours in ls and friends
-export CLICOLOR=1
-export LSCOLORS=dxfxcxdxbxegedabagacad
-export LS_COLORS='di=33:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43'
+# Colours live in shell/env.sh, shared with bash.
 
 # Coloured man pages — replaces the oh-my-zsh `colored-man-pages` plugin
 man() {

@@ -6,6 +6,7 @@
 	defaultBranch = main
 
 [core]
+	pager = less -FX
 	excludesfile = ~/.gitignore_global
 	editor = vim
 	autocrlf = input
@@ -47,16 +48,34 @@
 [help]
 	autocorrect = prompt
 
+# --- GUI diff/merge with Meld ------------------------------------------------
+# One command for both platforms: on Linux (and anywhere Meld is on $PATH) it
+# runs directly; on macOS, where Meld is an .app bundle, it falls back to
+# `open -W -a`, which blocks until the window closes so git waits for the edit.
+[difftool]
+	prompt = false
+[difftool "meld"]
+	trustExitCode = true
+	cmd = "sh -c 'if command -v meld >/dev/null 2>&1; then meld \"$LOCAL\" \"$REMOTE\"; else open -W -a Meld --args \"$LOCAL\" \"$REMOTE\"; fi'"
+[mergetool]
+	prompt = false
+	keepBackup = false
+[mergetool "meld"]
+	trustExitCode = true
+	cmd = "sh -c 'if command -v meld >/dev/null 2>&1; then meld --auto-merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\"; else open -W -a Meld --args --auto-merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" --output=\"$MERGED\"; fi'"
+
 # --- delta: syntax-highlighted diffs in the pager ---------------------------
-# Falls back gracefully: if delta is not installed git just uses less.
+# Each entry falls back to less/cat when delta is not on PATH
+# (fresh box, HPC node), so git never breaks. delta comes from
+# install/linux-tools.sh on Linux and the Brewfile on macOS.
 [pager]
-	diff = delta
-	log = delta
-	reflog = delta
-	show = delta
+	diff = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	log = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	reflog = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	show = command -v delta >/dev/null 2>&1 && exec delta || exec less
 
 [interactive]
-	diffFilter = delta --color-only
+	diffFilter = command -v delta >/dev/null 2>&1 && exec delta --color-only || exec cat
 
 [delta]
 	navigate = true
@@ -64,26 +83,10 @@
 	side-by-side = false
 	hyperlinks = true
 
-# --- GUI diff/merge with Meld ------------------------------------------------
-# The `open -W -a` form is macOS; on Linux Meld is on $PATH and git finds it
-# without any of this.
-[difftool]
-	prompt = false
-[difftool "meld"]
-	trustExitCode = true
-	cmd = open -W -a Meld --args \"$LOCAL\" \"$PWD/$REMOTE\"
-[mergetool]
-	prompt = false
-	keepBackup = false
-[mergetool "meld"]
-	trustExitCode = true
-	cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
-
-[filter "lfs"]
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
+# NB: the git-lfs filter is deliberately NOT enabled in this tracked file. A
+# `required = true` lfs filter breaks every checkout on a machine without
+# git-lfs, such as the VDI. link.sh writes it into ~/.gitconfig.local instead,
+# on machines where git-lfs is actually installed.
 
 [alias]
 	# --- status / inspection ---
@@ -94,9 +97,11 @@
 	lns = log --name-status
 	follow = log --name-status --follow
 	last = log -1 HEAD --stat
+	db = diff-blame
 
 	# --- diffs ---
 	di = diff
+	dif = diff
 	dic = diff --color-words
 	dis = diff --staged
 	disc = diff --staged --color-words
@@ -107,13 +112,20 @@
 	sw = switch
 	swc = switch -c
 	cm = cherry -v main
+	cmm = cherry -v master
 
 	# --- committing ---
 	ci = commit
 	cia = commit --amend
+	cl = clone
 	cp = cherry-pick
 	cpo = cherry-pick --strategy=recursive --strategy-option=ours
 	cpt = cherry-pick --strategy=recursive --strategy-option=theirs
+
+	# --- moving files ---
+	move = mv
+	ren = mv
+	rename = mv
 
 	# --- syncing ---
 	fa = !git fetch --all --prune && git fetch --all --tags
@@ -132,14 +144,29 @@
 	rc = rebase --continue
 	rs = !git stash && git rebase 'HEAD@{u}' && git pop
 	ws = rebase --whitespace=strip
-	# `git ri5` etc. still work, but `git rn 5` covers every depth.
+	# `git rn 5` = rebase -i HEAD~5; ri1..ri9 kept for muscle memory
 	rn = "!f() { git rebase -i HEAD~${1:-1}; }; f"
+	ri1 = rebase -i HEAD~1
+	ri2 = rebase -i HEAD~2
+	ri3 = rebase -i HEAD~3
+	ri4 = rebase -i HEAD~4
+	ri5 = rebase -i HEAD~5
+	ri6 = rebase -i HEAD~6
+	ri7 = rebase -i HEAD~7
+	ri8 = rebase -i HEAD~8
+	ri9 = rebase -i HEAD~9
 
 	# --- stash ---
 	pop = stash pop --index
 	spop = !git checkout 'stash^{tree}' -- . && git stash drop
 
-	# --- housekeeping ---
+	# --- filter-branch / housekeeping ---
 	fb = filter-branch -f --prune-empty
+	fbs = filter-branch -f --prune-empty --subdirectory-filter
+	fbt = filter-branch -f --prune-empty --tree-filter
 	pack = !git reset --hard && git for-each-ref --format='%(refname)' refs/original/ | xargs -n 1 git update-ref -d && git reflog expire --expire=now --all && git gc --aggressive --prune=now
 	ghr = "!ghr() { git remote set-url origin https://github.com/$1 && git remote set-url --push origin git@github.com:$1; }; ghr"
+
+# machine-specific overrides (not tracked); a missing file is ignored
+[include]
+	path = ~/.gitconfig.local

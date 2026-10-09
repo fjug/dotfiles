@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install-linux-tools.sh — user-level CLI tools for a Linux box without root
+# install/linux-tools.sh — user-level CLI tools for a Linux box without root
 # (RHEL VDI, HPC login node). Mirrors the Mac's Brewfile "modern CLI core".
 #
 # Every tool is a static (musl) or self-contained x86_64 release binary from
@@ -12,7 +12,7 @@
 # links are (re)pointed every run. Nothing touches shell rc files.
 # A pre-existing *real file* in ~/.local/bin is moved to ~/.local/opt/backup/.
 #
-# Usage: ./install-linux-tools.sh [tool ...]   (default: all)
+# Usage: install/linux-tools.sh [tool ...]   (default: all)
 # To upgrade: bump version/url/sha256 below (see linux-tools.md) and re-run.
 
 set -euo pipefail

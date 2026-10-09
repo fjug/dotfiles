@@ -1,39 +1,45 @@
-# .bashrc — minimal fallback for machines where zsh isn't available
-# (HPC login nodes, VDI boxes, containers). The real setup is .zshrc.
+# .bashrc — interactive bash configuration.
+#
+# A thin loader: everything real lives in $DOTFILES/bash/*.bash and is sourced
+# in numeric order, mirroring how .zshrc loads $DOTFILES/zsh/*.zsh. To add
+# something, drop a file in there rather than growing this one.
+#
+# zsh remains the login shell on the Macs; this is what you get on the Linux
+# boxes, and whenever you run bash here.
+#
+# Machine-specific settings that must not be committed go in ~/.bashrc.local.
 
-# Interactive shells only.
+# --- things non-interactive shells need too ----------------------------------
+# $HOME/.local/bin must be on PATH for non-interactive shells as well (the
+# VS Code server, scp, remote git hooks), so it is set before the bail-out.
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
+# if not running interactively, stop here
 case $- in *i*) ;; *) return ;; esac
 
+# --- where this repo lives ---------------------------------------------------
+# Derived from where this file really is, so it works via the ~/.bashrc
+# symlink and from a clone in any location. Deliberately not taken from the
+# environment: a zsh started elsewhere may export a different DOTFILES.
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  _src="${BASH_SOURCE[0]}"
+  if [ -L "$_src" ]; then
+    _src="$(readlink "$_src")"
+    case "$_src" in /*) ;; *) _src="$HOME/$_src" ;; esac
+  fi
+  DOTFILES="$(cd "$(dirname "$_src")" && pwd)"
+  unset _src
+fi
 export DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
-export EDITOR=vim
-export VISUAL="$EDITOR"
-export PAGER=less
-export LESS='-R -F -X'
 
-# History
-export HISTSIZE=100000
-export HISTFILESIZE=100000
-export HISTCONTROL=ignoreboth:erasedups
-shopt -s histappend checkwinsize cdspell 2>/dev/null
+for _bfile in "$DOTFILES"/bash/*.bash; do
+  [ -r "$_bfile" ] && . "$_bfile"
+done
+unset _bfile
 
-set -o vi
-
-export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
-
-export CLICOLOR=1
-export LSCOLORS=dxfxcxdxbxegedabagacad
-alias ls='ls --color=auto 2>/dev/null || ls'
-alias ll='ls -lh'
-alias la='ls -lah'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias myip='ifconfig 2>/dev/null | grep "inet " | grep -v 127.0.0.1'
-alias today='date "+%Y-%m-%d %H:%M (%A)"'
-alias g='git'
-alias gst='git status'
-
-# Prompt with git branch, no external dependencies.
-__branch() { git branch --show-current 2>/dev/null | sed 's/.*/ (&)/'; }
-PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;35m\]$(__branch)\[\033[00m\]\$ '
-
+# --- machine-local overrides, not tracked by git -----------------------------
+[ -r "$HOME/.bash_local" ]   && . "$HOME/.bash_local"     # older name
 [ -r "$HOME/.bashrc.local" ] && . "$HOME/.bashrc.local"

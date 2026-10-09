@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Set up a fresh machine from this repo.
 #
-#   git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles
+#   git clone https://github.com/fjug/dotfiles.git ~/.dotfiles
 #   ~/.dotfiles/bootstrap.sh
 #
 # Idempotent — safe to run again on a machine that's already set up.

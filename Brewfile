@@ -11,7 +11,11 @@
 # the login shell.
 brew "zsh"
 brew "zsh-completions"
-brew "starship"                 # prompt (replaces the oh-my-zsh bira_conda theme)
+# bash 5.x. macOS still ships bash 3.2 (2007, GPLv2) and always will; zsh stays
+# the login shell, but scripts and interactive bash both want a current one.
+brew "bash"
+brew "bash-completion@2"
+brew "starship"                 # prompt, shared by zsh and bash
 
 # --- modern CLI core --------------------------------------------------------
 brew "eza"                      # ls

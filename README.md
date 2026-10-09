@@ -1,235 +1,100 @@
-# .dotfiles
+# dotfiles
 
-Florian Jug's shell and tool configuration. macOS first, Linux where it makes
-sense (the shell config, git, and vim work on both; the Brewfiles and the
-`defaults write` script are macOS only).
-
----
-
-## Installing on a new Mac
-
-### 1. Clone and bootstrap
-
-Nothing needs installing first — `git` triggers the Xcode Command Line Tools
-prompt on its own. Use HTTPS here, since your SSH keys aren't on the machine
-yet; step 4 switches the remote over.
+Florian Jug's shell and tool configuration — macOS and Linux, zsh and bash,
+from one tree.
 
 ```bash
-git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles && ~/.dotfiles/bootstrap.sh
+git clone https://github.com/fjug/dotfiles.git ~/.dotfiles
+~/.dotfiles/bootstrap.sh
 ```
 
-`bootstrap.sh` asks for confirmation once, then runs four steps:
+The repo is named `dotfiles`; it is cloned to `~/.dotfiles`. `bootstrap.sh`
+detects the platform and is safe to re-run. If something looks wrong,
+`install/doctor.sh` says what and how to fix it.
 
-1. **symlinks** — links every config into `$HOME`, backing up anything real it
-   finds in the way. First on purpose: it's instant, needs no network, and means
-   you end up with a working shell even if every download afterwards fails
-2. **packages** — installs the Xcode Command Line Tools (waiting for them to
-   finish), Homebrew, then everything in `Brewfile`
-3. **python** — installs uv, managed Python 3.11/3.12/3.13, and the global tools
-4. **shell** — offers to make Homebrew's zsh the login shell (`chsh` will ask
-   for your password), then pre-fetches the zsh plugins so your first real
-   terminal doesn't stall
-
-**The steps are independent.** A failure in one doesn't abort the others; the
-summary at the end lists what broke and the exact command to re-run just that
-piece. Budget 5–10 minutes. Then open a new terminal (or `exec zsh`).
-
-Switches:
-
-```bash
-DOTFILES_YES=1  ~/.dotfiles/bootstrap.sh     # ask nothing, assume yes
-DOTFILES_APPS=1 ~/.dotfiles/bootstrap.sh     # also install the GUI apps
-DOTFILES_TEX=1  ~/.dotfiles/bootstrap.sh     # also install MacTeX (6.4 GB)
-```
-
-Skip `DOTFILES_APPS` on the first run and read `Brewfile.apps` first — it is an
-inventory of the old machine's `/Applications`, not a recommendation, and it is
-a large download. MacTeX is not in the baseline for the same reason.
-
-The whole thing is idempotent. Re-running it on a machine that's already set up
-is a no-op, so it's also the way to pick up changes later.
-
-### If something didn't work
-
-```bash
-~/.dotfiles/install/doctor.sh
-```
-
-Read-only. It checks symlinks, Homebrew, PATH, every tool, uv, the login shell,
-zsh plugins and ssh, and prints the fix for each gap it finds.
-
-The most common confusion it resolves: tools *are* installed, but the shell
-can't see them because `~/.zshenv` wasn't in place when it started, so
-`/opt/homebrew/bin` never made it onto `PATH`. Run `link.sh` and open a new
-terminal.
-
-### 2. GUI applications
-
-Once you've pruned `Brewfile.apps` down to what you actually want:
-
-```bash
-brew bundle --file=~/.dotfiles/Brewfile.apps
-```
-
-A handful aren't packaged as casks (Trello, FileZilla Pro, reMarkable, VMware
-Horizon, kDrive, institute-managed and App Store apps) — they're listed with
-sources at the bottom of that file.
-
-### 3. macOS preferences
-
-Opt-in, and worth skimming before you run it. Sets fast key repeat, disables
-press-and-hold so vim's `hjkl` repeat, turns off smart quotes and dashes, and
-tidies Finder and the Dock.
-
-```bash
-~/.dotfiles/install/macos-defaults.sh
-```
-
-Log out and back in afterwards for the keyboard settings to take effect.
-
-### 4. SSH
-
-The only genuinely manual part. Copy the private keys across over an encrypted
-channel — AirDrop or a USB stick, not email. **`ht` is the key that matters**:
-it's what the HPC, VDI and deNBI hosts know, it's what GitHub authenticates
-with, and it's the one `ssh/config.example` points at. `id_rsa` is a 2048-bit
-key from an older laptop that nothing currently references.
-
-```bash
-cp ~/.dotfiles/ssh/config.example ~/.ssh/config
-$EDITOR ~/.ssh/config                        # fill in the hostnames
-~/.dotfiles/install/ssh-setup.sh             # perms + load keys into the keychain
-```
-
-`ssh-setup.sh` fixes the permissions on `~/.ssh` and adds **every** private key
-it finds — `ht`, `id_rsa`, `id_ed25519` — to the agent with
-`--apple-use-keychain`, so passphrases are stored once and never asked for
-again. By hand it would be:
-
-```bash
-chmod 700 ~/.ssh && chmod 600 ~/.ssh/ht ~/.ssh/id_rsa ~/.ssh/config
-ssh-add --apple-use-keychain ~/.ssh/ht ~/.ssh/id_rsa
-ssh-add -l                                   # confirm both are loaded
-```
-
-If you'd rather start fresh — worth considering, since every current key is RSA
-from 2021 — `ssh-keygen -t ed25519 -C "florian.jug@fht.org"`, then add the
-public half to GitHub and to the HPC/VDI/deNBI hosts before retiring `ht`.
-
-Now switch this repo's remote to SSH:
-
-```bash
-git -C ~/.dotfiles remote set-url origin git@github.com:fjug/.dotfiles.git
-```
-
-### 5. GitHub CLI
-
-```bash
-gh auth login
-```
-
-### Not handled by the scripts, on purpose
-
-- **Gurobi** — install it and drop `gurobi.lic` in place. `zsh/10-path.zsh`
-  globs `/Library/gurobi*`, so there's no version number to keep updating.
-- **Institute-managed software** — FortiClient, HT Self Service, VMware Horizon.
-- **Terminal** — the old machine used Terminal.app with no profile in git. For
-  something nicer: `brew install --cask ghostty` (or `iterm2`).
-
-### Check it worked
-
-```bash
-exec zsh
-zsh --version                  # expect Homebrew's, not /bin/zsh's
-dscl . -read ~/ UserShell      # should be $(brew --prefix)/bin/zsh
-which starship uv eza bat rg fd fzf zoxide delta lazygit
-uv python list
-git config --get user.email
-```
-
-If the login shell didn't take, do it by hand — `chsh` needs your password and
-can't be scripted:
-
-```bash
-sudo sh -c 'echo "$(brew --prefix)/bin/zsh" >> /etc/shells'
-chsh -s "$(brew --prefix)/bin/zsh"
-```
-
-### Before wiping the old machine
-
-See [docs/NEW-MACHINE.md](docs/NEW-MACHINE.md) — the things that are
-deliberately *not* in this repo and have to come across by hand (keys, licences,
-unpushed work, conda environments you still need).
-
----
-
-## Installing on Linux
-
-Same entry point. `install/packages.sh` uses Homebrew if it's there, and
-otherwise falls back to apt / dnf / pacman / zypper, papering over the Debian
-`batcat` and `fdfind` renames.
-
-```bash
-git clone https://github.com/fjug/.dotfiles.git ~/.dotfiles && ~/.dotfiles/bootstrap.sh
-```
-
-On a machine where you can't install anything at all (an HPC login node), just
-`link.sh` is fine — every tool integration is guarded, so the config degrades to
-a plain vcs_info prompt and zsh's built-in history search.
-
----
-
-## What's here
+## How it fits together
 
 ```
-bootstrap.sh          one-command setup for a new machine
-link.sh               symlink configs into $HOME (idempotent)
-Brewfile              CLI baseline — formulae + the few casks that are tooling
-Brewfile.apps         GUI applications, mirroring the old machine
+shell/          sourced by BOTH zsh and bash, on both platforms
+  env.sh          platform detection, EDITOR/PAGER/LESS, XDG, colours, locale
+  aliases.sh      every alias that is not shell-specific
+  functions.sh    mkcd, extract, git-latexdiff, scratch, diff, version
+zsh/            00-options 10-path 20-completion 30-plugins 40-tools
+                50-aliases 60-functions 70-keybindings
+bash/           00-lib 10-path 20-options 30-completion 40-prompt
+                50-tools 60-aliases 70-functions 90-conda
+config/         starship.toml, bat/config
 install/
-  lib.sh              shared helpers (logging, platform detection, linking)
-  packages.sh         Homebrew, or a Linux package-manager fallback
-  python-uv.sh        uv, managed interpreters, global tools
-  ssh-setup.sh        ~/.ssh permissions + load keys into the agent
-  macos-defaults.sh   system preferences (opt-in, read before running)
-  doctor.sh           read-only diagnosis of what's missing, and how to fix it
-zsh/                  the actual shell config, sourced in numeric order
-  00-options.zsh      history, globbing, directory stack
-  10-path.zsh         PATH, Homebrew shellenv, optional tool dirs
-  20-completion.zsh   compinit with a once-a-day cache rebuild
-  30-plugins.zsh      autosuggestions, syntax highlighting, history search
-  40-tools.zsh        starship, zoxide, fzf, bat, uv, gh, ssh-agent
-  50-aliases.zsh
-  60-functions.zsh
-  70-keybindings.zsh
-config/starship.toml  prompt
-ssh/config.example    template — the real ~/.ssh/config is never committed
-docs/                 old-machine checklist, conda→uv migration
-.zshrc .zshenv .bashrc .vimrc .vim/ .inputrc .gitconfig .gitignore_global
+  lib.sh          logging, platform detection, idempotent linking
+  packages.sh     Homebrew, or a Linux package manager + linux-tools.sh
+  linux-tools.sh  pinned, SHA-256-verified release binaries into ~/.local
+  python-uv.sh    uv, managed interpreters, global tools
+  ssh-setup.sh    ~/.ssh permissions, load keys into the agent
+  macos-defaults.sh
+  doctor.sh       read-only diagnosis
+bootstrap.sh    one command for a new machine
+link.sh         symlinks, idempotent
+Brewfile        macOS CLI baseline     Brewfile.apps   macOS GUI apps
+docs/           NEW-MACHINE.md, conda-to-uv.md, linux-tools.md
 ```
+
+The `shell/` directory is the point of the layout: aliases and functions are
+written once, in a dialect that parses in zsh, bash 5.x and the bash 3.2 that
+macOS still ships. `zsh/` and `bash/` hold only what is genuinely specific to
+one shell. Both get the same starship prompt, the same tools, the same vi
+editing mode and the same muscle memory.
+
+## Platforms
+
+**macOS.** zsh is the login shell (Homebrew's, not Apple's 5.9). `Brewfile` is
+the CLI baseline; `Brewfile.apps` mirrors the GUI apps. MacTeX is deliberately
+not in the baseline — it is a 6.4 GB download, so `brew install --cask mactex`
+or `DOTFILES_TEX=1` when you want it.
+
+**Linux.** bash is the shell. Where there is root, `install/packages.sh` uses
+apt/dnf/pacman/zypper. Where there is not — the VDI, an HPC login node —
+`install/linux-tools.sh` fetches pinned, SHA-256-verified release binaries
+into `~/.local`, links completions and man pages, and touches no rc file. See
+[docs/linux-tools.md](docs/linux-tools.md).
+
+**Anywhere.** Every tool integration is guarded. On a bare login node you get
+a git-aware fallback prompt and bash's own history search, and nothing errors.
 
 ## Design decisions
 
-**No plugin manager.** `zsh/30-plugins.zsh` git-clones four plugins into
-`~/.local/share/zsh/plugins` on first run and sources them. Same behaviour on
-macOS and Linux, nothing to update but git. `dotfiles-update-plugins` pulls them.
+**One shared core, two shells.** See `shell/` above. The alternative — a bash
+config that drifts from the zsh one — is what this repo had before.
 
-**uv only, no conda.** There is no conda, mamba, or pyenv anywhere in this repo,
-and `install/python-uv.sh` warns if it finds one. `uv` manages the interpreters
-too, so there's no `brew install python` either. Migration notes:
+**No zsh plugin manager.** `zsh/30-plugins.zsh` git-clones four plugins into
+`~/.local/share/zsh/plugins` on first run and sources them.
+`dotfiles-update-plugins` pulls them.
+
+**bash start-up is cached.** `starship`, `zoxide` and `fzf` init cost ~100 ms
+of process spawns per shell. `_cached_init` writes the generated code to
+`~/.cache/bash-init/` and rebuilds only when the binary or config is newer.
+`_starship_init` additionally rewrites `$(starship time)` — one spawn at
+start-up plus two per command — into bash's own `$EPOCHREALTIME`. Completions
+for `uv`, `uvx` and `gh` are generated to files so bash-completion lazy-loads
+them on first <Tab>. This matters on a CPU-throttled VDI, where a fork can
+cost 0.1 s.
+
+**uv for Python; conda only where it still exists.** No conda, mamba or pyenv
+is installed by anything here, and `uv` manages the interpreters, so there is
+no `brew install python` either. The pip/conda guardrails in `shell/aliases.sh`
+switch themselves off on a machine that has conda, because the Linux boxes
+still depend on it, and `bash/90-conda.bash` initialises it there — guarded, so
+a conda-free machine pays nothing. Migration notes:
 [docs/conda-to-uv.md](docs/conda-to-uv.md).
 
-**Machine-specific things stay out of git.** `~/.zshrc.local` is sourced last
-and is not tracked — licences, work-only hosts, and anything that shouldn't be
-public go there. Same for `~/.bashrc.local` and `~/.ssh/config`.
+**Machine-specific things stay out of git.** `~/.zshrc.local`,
+`~/.bashrc.local` and `~/.gitconfig.local` are sourced last and are not
+tracked. `link.sh` creates them, and puts the git-lfs filter in the last one
+only where git-lfs exists — a `required = true` lfs filter breaks every
+checkout on a machine without it.
 
-**Guarded, not assumed.** Every tool integration in `zsh/40-tools.zsh` checks
-whether the tool exists first, so the same config works on an HPC login node
-where you can't install anything. Without starship you get a vcs_info prompt;
-without fzf, `^R` falls back to zsh's incremental search.
-
-**Nothing is version pinned.** The Brewfile lists names, not versions, so a
-fresh install always lands on current releases.
+**Nothing is version pinned, except where it must be.** The Brewfile lists
+names. `install/linux-tools.sh` pins version *and* SHA-256, because it
+downloads release binaries over the network.
 
 ## Everyday commands
 
@@ -238,33 +103,45 @@ fresh install always lands on current releases.
 | `dotfiles` | cd here |
 | `dotfiles-sync` | git pull + re-link |
 | `dotfiles-update-plugins` | pull each zsh plugin |
-| `zshconfig` | edit `.zshrc` |
+| `zshconfig` / `bashconfig` | edit the respective rc |
 | `z <fragment>` | jump to a frecent directory (zoxide) |
 | `^R` / `^T` / `⌥C` | fzf history / files / cd |
 | `lg` | lazygit |
 | `scratch [pkg...]` | throwaway uv project in a temp dir |
 | `extract <archive>` | unpack anything |
 | `git-latexdiff <f.tex> <n>` | diff a paper against `HEAD~n`, open the PDF |
+| `version` | what OS is this, really |
 
-## Keeping two machines in sync
+## Keeping machines in sync
 
 ```bash
-dotfiles-sync                                        # git pull + re-link
-dotfiles-update-plugins                              # pull each zsh plugin
-brew update && brew upgrade
-brew bundle --file=~/.dotfiles/Brewfile
+dotfiles-sync && dotfiles-update-plugins
+# macOS
+brew update && brew upgrade && brew bundle --file=~/.dotfiles/Brewfile
+# Linux
+~/.dotfiles/install/linux-tools.sh
+# both
 uv tool upgrade --all
 ```
 
-If you add a package on one machine, add it to `Brewfile` and commit — that's
-what keeps the two from drifting.
+Add a package on one machine, add it to `Brewfile` or `install/linux-tools.sh`,
+commit. That is what keeps them from drifting.
 
 ## History
 
-The pre-2026 state is tagged `pre-cleanup-2026`. It carried a large amount of
-inherited configuration from a 2012-era fork — `mrconfig` with ~60 dead Java
-repositories, `plugins/*.sh` full of ImageJ/LOCI/Maven aliases, a `cwd/`
-bookmark system, MacPorts and Anaconda paths for a user that no longer exists.
-All of that is gone. The `.vim/` tree was kept as it was, deliberately.
+This repo is the consolidation of two that ran in parallel for a decade:
 
-Interactive shell startup went from 2.2 s to 0.28 s.
+- **`fjug/.dotfiles`** (this one, since renamed) — own repo, 2016, macOS/zsh,
+  carrying the 2026 modernization: oh-my-zsh and conda out, starship and uv in.
+- **`fjug/dotfiles`** — a fork of [ctrueden/dotfiles](https://github.com/ctrueden/dotfiles),
+  2010, 562 commits, Linux/bash, carrying the 2026 VDI setup, which was itself
+  a translation of the Mac zsh config into bash.
+
+They were merged with `--allow-unrelated-histories`, so all 562 commits and
+their authorship — Curtis Rueden's included — are in `git log` here. The merge
+commit is the boundary; anything removed in the consolidation (the modular
+`vimrc.d/`, `mrconfig` and its ~60 dead Java repositories, `zshrc`'s zgen
+setup) is recoverable from it.
+
+Tags: `pre-cleanup-2026` is the state before the Mac modernization,
+`pre-consolidation-2026` the state before this merge.

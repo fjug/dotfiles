@@ -138,6 +138,14 @@ case "$mgr" in
   zypper) sudo zypper install -y $pkgs ;;
 esac
 
-# starship and lazygit are rarely packaged; use their own installers.
+# The pinned, rootless installer fills in whatever the distro lacks: it fetches
+# verified release binaries into ~/.local, so it works on a VDI or HPC node with
+# no root at all, and it is idempotent.
+if [ -x "$DOTFILES/install/linux-tools.sh" ]; then
+  info "installing pinned user-level CLI tools"
+  bash "$DOTFILES/install/linux-tools.sh" || warn "some pinned tools failed"
+fi
+
+# starship, if neither the distro nor the pinned installer provided it.
 has starship || curl -sS https://starship.rs/install.sh | sh -s -- --yes
 ok "packages done"

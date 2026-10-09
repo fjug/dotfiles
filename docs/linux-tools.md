@@ -2,7 +2,7 @@
 
 The Mac gets these from Homebrew (`~/.dotfiles/Brewfile`, "modern CLI core").
 On the RHEL 9 VDI there is no sudo, so they are installed per user by
-[`install-linux-tools.sh`](install-linux-tools.sh):
+[`install/linux-tools.sh`](install/linux-tools.sh):
 
 - release archives from the projects' **official GitHub releases** only,
 - static `x86_64-unknown-linux-musl` builds where offered (glibc-independent),
