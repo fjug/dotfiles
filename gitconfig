@@ -75,8 +75,8 @@
 	color = auto
 
 [user]
-	name = Curtis Rueden
-	email = ctrueden@wisc.edu
+	name = Florian Jug
+	email = florian.jug@fht.org
 
 [rebase]
 	autosquash = true
