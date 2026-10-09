@@ -50,6 +50,10 @@ builds.
 - **Not installed** (in the Mac Brewfile, but not needed or already present):
   `jq`, `tree`, `wget`, `git` come from RHEL; `btop`, `tldr`, `git-lfs`,
   `meld` are not installed (bashrc/gitconfig guard for them).
+- **Startup cache**: bashrc caches the init code of starship, zoxide and fzf
+  in `~/.cache/bash-init/` (forks are expensive on the VDI when the user's
+  0.98-CPU cgroup quota is busy). The installer clears it; delete it by hand
+  if a tool is upgraded some other way.
 - Config files are linked by [`link-configs.sh`](link-configs.sh):
   `config/starship.toml` -> `~/.config/starship.toml`,
   `config/bat/config` -> `~/.config/bat/config`, `inputrc` -> `~/.inputrc`.

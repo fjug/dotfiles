@@ -113,6 +113,11 @@ gen starship "$BIN/starship" completions bash
 gen uv       "$BIN/uv" generate-shell-completion bash
 gen uvx      "$BIN/uvx" --generate-shell-completion bash
 
+# bashrc caches the init code of starship/zoxide/fzf; make it regenerate
+for b in starship zoxide fzf; do
+	rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/bash-init/$b.bash"
+done
+
 say "done. Versions:"
 for b in starship fzf zoxide eza bat delta uv rg fd lazygit gh; do
 	[ -x "$BIN/$b" ] && printf '  %-9s %s\n' "$b" "$("$BIN/$b" --version 2> /dev/null | grep -m 1 -oE '[0-9]+\.[0-9]+\.[0-9]+')"

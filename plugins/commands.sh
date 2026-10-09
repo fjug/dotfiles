@@ -11,7 +11,6 @@ elif [ "$IS_LINUX" ]; then
 	alias ll='ls -lh --color=auto'
 	alias la='ls -lah --color=auto'
 	alias lt='ls -laht --color=auto'
-	export LS_COLORS="ow=30;42"
 else
 	# BSD ls (macOS): colour comes from CLICOLOR/LSCOLORS
 	alias ll='ls -lh'
@@ -45,6 +44,12 @@ alias ....='cd ../../..'
 alias cdgit='cd ~/GIT'
 alias d='dirs -v'
 alias dotfiles='cd "$DOTFILES"'
+alias bashconfig='$EDITOR "$DOTFILES/bashrc"'
+
+# dotfiles-sync - pull this repo and re-link the configs, in one go
+dotfiles-sync() {
+	command git -C "$DOTFILES" pull --ff-only && "$DOTFILES/link-configs.sh"
+}
 
 # mkcd - make a directory and step into it
 mkcd() { mkdir -p "$1" && cd "$1"; }
@@ -94,6 +99,29 @@ git-latexdiff() {
 	fi
 	rm -f "$1_diff.tmp" "$1_diff.tex" "$1_diff.aux" "$1_diff.log"
 }
+
+# --== python / uv ==--
+
+# as on the Mac; the Mac's pip/conda blockers are deliberately NOT ported,
+# because this machine uses conda
+alias py='uv run python'
+alias venv='uv venv'
+
+# scratch - a throwaway uv project in a temp dir, for trying a package out
+scratch() {
+	local d
+	d=$(mktemp -d "${TMPDIR:-/tmp}/scratch-XXXXXX") || return 1
+	cd "$d" || return 1
+	uv init --quiet .
+	[ $# -gt 0 ] && uv add "$@"
+	echo "scratch project at $d"
+}
+
+# --== remote hosts ==--
+
+alias deNBI='ssh -p 30253 -i ~/.ssh/ht ubuntu@129.70.51.6'
+alias deNBI8888='ssh -p 30253 -i ~/.ssh/ht ubuntu@129.70.51.6 -L 8888:localhost:8888'
+alias scpdeNBI='scp -i ~/.ssh/ht -P 30253'
 
 # --== myrepos ==--
 
@@ -167,6 +195,8 @@ alias histime='HISTTIMEFORMAT="%F %T " history'
 # --== misc ==--
 
 alias today='date "+%Y-%m-%d %H:%M (%A)"'
+# this host's IP addresses (the Mac's version parses ifconfig)
+alias myip='hostname -I'
 
 # extract - one command for every archive format
 extract() {

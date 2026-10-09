@@ -1,6 +1,12 @@
 # --== operating system (Darwin, Linux, etc.) ==--
 
-export OS_NAME="$(uname)"
+# from bash's $OSTYPE rather than $(uname), which would cost a fork
+case "$OSTYPE" in
+	darwin*) export OS_NAME=Darwin ;;
+	linux*) export OS_NAME=Linux ;;
+	cygwin*|msys*) export OS_NAME=CYGWIN ;;
+	*) export OS_NAME="$(uname)" ;;
+esac
 case "$OS_NAME" in
 	Darwin)
 		export IS_MACOSX=1
