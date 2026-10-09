@@ -1,0 +1,81 @@
+# Starship prompt — https://starship.rs
+#
+# Two-line prompt, close in spirit to the old `bira` theme it replaces:
+#   ╭─ user@host  ~/path  (git-branch) (python-venv)
+#   ╰─$
+# The conda module is deliberately absent; uv/venv is what shows up instead.
+#
+# Linux/VDI variant of ~/.dotfiles/config/starship.toml. Only difference:
+# this machine still uses conda, so the active (non-base) conda env is shown
+# after the python segment -- starship owns PS1, so conda's own "(env)"
+# prefix would otherwise be lost.
+
+format = """
+[╭─](bold)$username$hostname$directory$git_branch$git_status$python$conda$cmd_duration
+[╰─](bold)$character"""
+
+add_newline = true
+command_timeout = 1000
+
+[username]
+show_always = true
+format = "[$user]($style)"
+style_user = "bold green"
+style_root = "bold red"
+
+[hostname]
+ssh_only = false
+format = "[@$hostname]($style) "
+style = "bold green"
+
+[directory]
+format = "[$path]($style)[$read_only]($read_only_style) "
+style = "bold blue"
+truncation_length = 4
+truncate_to_repo = false
+read_only = " "
+
+[git_branch]
+format = "[‹$branch›]($style) "
+style = "bold yellow"
+
+[git_status]
+format = "([$all_status$ahead_behind]($style))"
+style = "bold red"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "$${count}"
+modified = "!${count}"
+staged = "+${count}"
+
+# Shows the uv / venv interpreter in play. Replaces the old $CONDA_DEFAULT_ENV
+# segment that the hand-patched bira_conda theme carried.
+[python]
+format = '[(\($virtualenv\) )${symbol}${version}]($style) '
+symbol = "py "
+style = "bold cyan"
+detect_extensions = ["py"]
+detect_files = ["pyproject.toml", "requirements.txt", ".python-version", "uv.lock"]
+
+[cmd_duration]
+min_time = 2000
+format = "[took $duration]($style) "
+style = "bold yellow"
+
+[character]
+success_symbol = "[\\$](bold)"
+error_symbol = "[\\$](bold red)"
+
+[conda]
+format = "[\\($environment\\)]($style) "
+style = "bold cyan"
+ignore_base = true
+
+# Off: noise for this workflow.
+[nodejs]
+disabled = true
+[package]
+disabled = true
