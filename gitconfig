@@ -60,10 +60,29 @@
 [mergetool "meld"]
 	trustExitCode = true
 
-# NB: delta (pager) and git-lfs (filter) are configured in ~/.dotfiles on the
-# Mac, but are deliberately NOT enabled here: pager = delta breaks every git
-# diff/log/show when delta is not installed, and a required lfs filter breaks
-# checkouts without git-lfs. Enable them in ~/.gitconfig.local if installed.
+# --- delta: syntax-highlighted diffs in the pager ---------------------------
+# Same pagers and [delta] options as ~/.dotfiles on the Mac. Unlike the Mac's
+# plain `delta`, each entry falls back to less/cat when delta is not on PATH
+# (fresh box, HPC node), so git never breaks. delta comes from
+# install-linux-tools.sh on Linux.
+[pager]
+	diff = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	log = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	reflog = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	show = command -v delta >/dev/null 2>&1 && exec delta || exec less
+
+[interactive]
+	diffFilter = command -v delta >/dev/null 2>&1 && exec delta --color-only || exec cat
+
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = false
+	hyperlinks = true
+
+# NB: the Mac's git-lfs filter is deliberately NOT enabled here: a required
+# lfs filter breaks checkouts without git-lfs (not installed on the VDI).
+# Enable it in ~/.gitconfig.local if git-lfs is installed.
 
 [alias]
 	# --- status / inspection ---
