@@ -16,8 +16,13 @@ Host *
     # needs typing. Harmless to leave in on Linux with IgnoreUnknown.
     IgnoreUnknown UseKeychain
     UseKeychain yes
-    ServerAliveInterval 60
-    ServerAliveCountMax 3
+    # Detect a dead link in ~60s rather than ~180s, and keep NAT state alive.
+    # This matters for any host behind a VPN: when the tunnel drops, this is
+    # how long a client (VS Code Remote-SSH in particular) keeps believing the
+    # connection is alive before giving up and retrying.
+    ServerAliveInterval 15
+    ServerAliveCountMax 4
+    TCPKeepAlive yes
     HashKnownHosts yes
 
 # --- institute ---------------------------------------------------------------
