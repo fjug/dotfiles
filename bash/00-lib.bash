@@ -2,12 +2,24 @@
 # Loaded first; the later modules depend on these. Written for speed: on a
 # CPU-throttled VDI every fork can cost ~0.1 s, so these avoid subshells.
 
-# _bin <cmd>: set REPLY to the full path of <cmd> on PATH, without forking.
-_bin() {
-  REPLY=
-  hash "$1" 2> /dev/null && REPLY="${BASH_CMDS[$1]}"
-  [ -n "$REPLY" ]
-}
+# _bin <cmd>: set REPLY to the full path of <cmd> on PATH.
+#
+# Fork-free on bash 4+ via the BASH_CMDS hash table, which matters on a VDI
+# where a fork can cost ~0.1 s. macOS's bash 3.2 has no BASH_CMDS, and without
+# the fallback below _bin failed there for every command — silently disabling
+# starship, zoxide and fzf in /bin/bash.
+if ((BASH_VERSINFO[0] >= 4)); then
+  _bin() {
+    REPLY=
+    hash "$1" 2> /dev/null && REPLY="${BASH_CMDS[$1]}"
+    [ -n "$REPLY" ]
+  }
+else
+  _bin() {
+    REPLY="$(command -v "$1" 2> /dev/null)"
+    [ -n "$REPLY" ]
+  }
+fi
 
 # _path_prepend <dir>: put <dir> at the front of PATH, moving it there if it
 # is already present, and doing nothing if it does not exist.
@@ -24,8 +36,12 @@ _path_prepend() {
 # Running starship, zoxide and fzf init on every shell costs ~100 ms; this
 # pays it once. The cache is rebuilt when it is missing or any dep file is
 # newer. install/linux-tools.sh clears it after installing a new version.
+# The cache file is keyed by bash major version: the generated code can use
+# features the other bash does not have (see _starship_init), and macOS has
+# both 3.2 and a Homebrew 5.x on the same machine.
 _cached_init() {
-  local name="$1" deps="$2" f="${XDG_CACHE_HOME:-$HOME/.cache}/bash-init/$1.bash" d stale=
+  local name="$1" deps="$2" d stale=
+  local f="${XDG_CACHE_HOME:-$HOME/.cache}/bash-init/$1-bash${BASH_VERSINFO[0]}.bash"
   shift 2
   [ -s "$f" ] || stale=1
   for d in $deps; do [ "$d" -nt "$f" ] && stale=1; done
@@ -49,8 +65,13 @@ _starship_init() {
   local exe init
   exe="$(command -v starship)" || return 1
   init="$("$exe" init bash --print-full-init)" || return 1
-  init="${init//"\$($exe time)"/'$(( ${EPOCHREALTIME//[!0-9]/} / 1000 ))'}"
-  init="${init//"$exe time"/'echo $(( ${EPOCHREALTIME//[!0-9]/} / 1000 ))'}"
+  # $EPOCHREALTIME is bash 5.0+. On bash 3.2 the rewrite would leave
+  # `$(( / 1000 ))` behind and throw an arithmetic error on every prompt, so
+  # it is only applied where the variable actually exists.
+  if [ -n "${EPOCHREALTIME:-}" ]; then
+    init="${init//"\$($exe time)"/'$(( ${EPOCHREALTIME//[!0-9]/} / 1000 ))'}"
+    init="${init//"$exe time"/'echo $(( ${EPOCHREALTIME//[!0-9]/} / 1000 ))'}"
+  fi
   init="${init//$'\n'"PS2=\"\$($exe prompt --continuation)\""/}"
   printf '%s\n' "$init"
   printf 'PS2=%q\n' "$(STARSHIP_SHELL=bash "$exe" prompt --continuation)"

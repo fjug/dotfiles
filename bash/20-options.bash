@@ -8,10 +8,15 @@ export HISTCONTROL=ignoreboth:erasedups   # HIST_IGNORE_ALL_DUPS + HIST_IGNORE_S
 export HISTTIMEFORMAT='%F %T '            # EXTENDED_HISTORY
 shopt -s histappend checkwinsize cdspell 2> /dev/null
 shopt -s histverify                       # HIST_VERIFY: show !! before running it
-shopt -s autocd                           # AUTO_CD: a bare directory name cd's
+# AUTO_CD (a bare directory name cd's) is set with the bash 4+ group below.
 shopt -s extglob nocaseglob               # EXTENDED_GLOB, NO_CASE_GLOB
-shopt -s globstar 2> /dev/null            # ** (bash 4+; absent in macOS bash 3.2)
-shopt -s dirspell 2> /dev/null
+# bash 4+ only. macOS's /bin/bash is 3.2 and prints
+# "shopt: autocd: invalid shell option name" for each of these, so they are
+# set one at a time with errors discarded rather than in one failing call.
+for _o in autocd globstar dirspell; do
+  shopt -s "$_o" 2> /dev/null
+done
+unset _o
 
 # INC_APPEND_HISTORY: write each command as it runs rather than at exit, so a
 # second terminal sees it immediately. Prepended, so starship's own
