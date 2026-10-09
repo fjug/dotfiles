@@ -120,5 +120,5 @@ done
 
 say "done. Versions:"
 for b in starship fzf zoxide eza bat delta uv rg fd lazygit gh; do
-	[ -x "$BIN/$b" ] && printf '  %-9s %s\n' "$b" "$("$BIN/$b" --version 2> /dev/null | grep -m 1 -oE '[0-9]+\.[0-9]+\.[0-9]+')"
+	[ -x "$BIN/$b" ] && printf '  %-9s %s\n' "$b" "$("$BIN/$b" --version 2> /dev/null | grep -m 1 -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
 done
