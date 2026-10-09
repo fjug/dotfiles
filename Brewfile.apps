@@ -11,73 +11,73 @@
 # recommendation. Comment out what you don't want to carry over.
 
 # --- editors & dev ----------------------------------------------------------
-cask "visual-studio-code"
-cask "cursor"
+# cask "visual-studio-code"
+# cask "cursor"
 cask "textmate"
-cask "intellij-idea-ce"
-cask "pycharm-ce"
+# cask "intellij-idea-ce"
+# cask "pycharm-ce"
 cask "docker"                   # Docker Desktop
 
 # --- AI ---------------------------------------------------------------------
-cask "claude"
-cask "chatgpt"
+# cask "claude"
+# cask "chatgpt"
 
 # --- browsers ---------------------------------------------------------------
-cask "firefox"
-cask "google-chrome"
-cask "microsoft-edge"
+# cask "firefox"
+# cask "google-chrome"
+# cask "microsoft-edge"
 
 # --- science & writing ------------------------------------------------------
-cask "zotero"
-cask "fiji"                     # ImageJ/Fiji
-cask "skim"                     # PDF reader/annotator
-cask "inkscape"
-cask "drawio"
+# cask "zotero"
+# cask "fiji"                     # ImageJ/Fiji
+# cask "skim"                     # PDF reader/annotator
+# cask "inkscape"
+# cask "drawio"
 cask "blender"
 cask "calibre"
 
 # --- communication ----------------------------------------------------------
-cask "slack"
+# cask "slack"
 cask "signal"
-cask "whatsapp"
-cask "element"
-cask "mattermost"
-cask "zoom"
-cask "webex"
-cask "microsoft-teams"
-cask "gather"
+# cask "whatsapp"
+# cask "element"
+# cask "mattermost"
+# cask "zoom"
+# cask "webex"
+# cask "microsoft-teams"
+# cask "gather"
 
 # --- productivity -----------------------------------------------------------
-cask "microsoft-office"
-cask "todoist"
-cask "busycal"
-cask "deepl"
-cask "default-folder-x"
+# cask "microsoft-office"
+# cask "todoist"
+# cask "busycal"
+# cask "deepl"
+# cask "default-folder-x"
 
 # --- window & menubar management --------------------------------------------
 # Note: Spectacle is on the old machine but has been unmaintained for years —
 # Rectangle is its successor and is the only one listed here.
-cask "rectangle"
-cask "alt-tab"
-cask "flycut"                   # clipboard history
-cask "hiddenbar"
-cask "istat-menus"
+# cask "rectangle"
+# cask "alt-tab"
+# cask "flycut"                   # clipboard history
+# cask "hiddenbar"
+# cask "istat-menus"
 
 # --- cloud & sync -----------------------------------------------------------
-cask "dropbox"
-cask "google-drive"
-cask "owncloud"
-cask "proton-mail"
-cask "proton-mail-bridge"
-cask "protonvpn"
+# cask "dropbox"
+# cask "google-drive"
+# cask "owncloud"
+# cask "proton-mail"
+# cask "proton-mail-bridge"
+# cask "protonvpn"
 
 # --- media & misc -----------------------------------------------------------
 cask "vlc"
 cask "spotify"
 cask "steam"
-cask "adobe-creative-cloud"     # installs the CC app; the suite comes from there
-cask "teamviewer"
-cask "microsoft-remote-desktop"
+# cask "adobe-creative-cloud"     # installs the CC app; the suite comes from there
+# cask "teamviewer"
+# cask "microsoft-remote-desktop"
 cask "appcleaner"               # clean uninstalls — worth having from day one
 
 # --- NOT available as casks: install by hand on the new machine --------------

@@ -16,3 +16,10 @@ unset _zfile
 
 # Machine-local overrides — not tracked by git.
 [ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+
+# reading tools: reMarkable + Kobo
+export PATH="$HOME/reMarkable/bin:$HOME/Kobo/bin:$PATH"
+
+# Local AI models
+OLLAMA_MAX_LOADED_MODELS=1
+OLLAMA_KEEP_ALIVE=15m
