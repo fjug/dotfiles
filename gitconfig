@@ -1,0 +1,168 @@
+[user]
+	name = Florian Jug
+	email = florian.jug@fht.org
+
+[init]
+	defaultBranch = main
+
+[core]
+	pager = less -FX
+	excludesfile = ~/.gitignore_global
+	editor = vim
+	autocrlf = input
+
+[color]
+	ui = auto
+
+[push]
+	default = simple
+	autoSetupRemote = true
+	followTags = true
+
+[pull]
+	rebase = true
+
+[fetch]
+	prune = true
+	pruneTags = true
+
+[rebase]
+	autosquash = true
+	autostash = true
+
+[merge]
+	conflictstyle = zdiff3
+	tool = meld
+
+[rerere]
+	enabled = true
+
+[diff]
+	colorMoved = zebra
+	algorithm = histogram
+	tool = meld
+
+[branch]
+	sort = -committerdate
+
+[help]
+	autocorrect = prompt
+
+# Meld: on Linux git finds 'meld' on $PATH with no extra config. The macOS
+# 'open -W -a Meld' wrappers live in the ~/.dotfiles repo, not here.
+[difftool]
+	prompt = false
+[difftool "meld"]
+	trustExitCode = true
+[mergetool]
+	prompt = false
+	keepBackup = false
+[mergetool "meld"]
+	trustExitCode = true
+
+# --- delta: syntax-highlighted diffs in the pager ---------------------------
+# Same pagers and [delta] options as ~/.dotfiles on the Mac. Unlike the Mac's
+# plain `delta`, each entry falls back to less/cat when delta is not on PATH
+# (fresh box, HPC node), so git never breaks. delta comes from
+# install-linux-tools.sh on Linux.
+[pager]
+	diff = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	log = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	reflog = command -v delta >/dev/null 2>&1 && exec delta || exec less
+	show = command -v delta >/dev/null 2>&1 && exec delta || exec less
+
+[interactive]
+	diffFilter = command -v delta >/dev/null 2>&1 && exec delta --color-only || exec cat
+
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = false
+	hyperlinks = true
+
+# NB: the Mac's git-lfs filter is deliberately NOT enabled here: a required
+# lfs filter breaks checkouts without git-lfs (not installed on the VDI).
+# Enable it in ~/.gitconfig.local if git-lfs is installed.
+
+[alias]
+	# --- status / inspection ---
+	st = status
+	ls = ls-files
+	conflicts = diff --name-only --diff-filter=U
+	graph = log --date-order --graph --decorate --oneline
+	lns = log --name-status
+	follow = log --name-status --follow
+	last = log -1 HEAD --stat
+	db = diff-blame
+
+	# --- diffs ---
+	di = diff
+	dif = diff
+	dic = diff --color-words
+	dis = diff --staged
+	disc = diff --staged --color-words
+
+	# --- branching / checkout ---
+	br = branch
+	co = checkout
+	sw = switch
+	swc = switch -c
+	cm = cherry -v main
+	cmm = cherry -v master
+
+	# --- committing ---
+	ci = commit
+	cia = commit --amend
+	cl = clone
+	cp = cherry-pick
+	cpo = cherry-pick --strategy=recursive --strategy-option=ours
+	cpt = cherry-pick --strategy=recursive --strategy-option=theirs
+
+	# --- moving files ---
+	move = mv
+	ren = mv
+	rename = mv
+
+	# --- syncing ---
+	fa = !git fetch --all --prune && git fetch --all --tags
+	ff = merge --ff 'HEAD@{u}'
+	ffs = !git stash && git ff && git pop
+	pl = pull
+	prb = pull --rebase
+	ps = push
+	psf = push --force-with-lease
+	ru = remote update --prune
+	rhup = reset --hard 'HEAD@{u}'
+
+	# --- rebasing ---
+	ri = rebase -i
+	ra = rebase --abort
+	rc = rebase --continue
+	rs = !git stash && git rebase 'HEAD@{u}' && git pop
+	ws = rebase --whitespace=strip
+	# `git rn 5` = rebase -i HEAD~5; ri1..ri9 kept for muscle memory
+	rn = "!f() { git rebase -i HEAD~${1:-1}; }; f"
+	ri1 = rebase -i HEAD~1
+	ri2 = rebase -i HEAD~2
+	ri3 = rebase -i HEAD~3
+	ri4 = rebase -i HEAD~4
+	ri5 = rebase -i HEAD~5
+	ri6 = rebase -i HEAD~6
+	ri7 = rebase -i HEAD~7
+	ri8 = rebase -i HEAD~8
+	ri9 = rebase -i HEAD~9
+
+	# --- stash ---
+	pop = stash pop --index
+	spop = !git checkout 'stash^{tree}' -- . && git stash drop
+
+	# --- filter-branch / housekeeping ---
+	fb = filter-branch -f --prune-empty
+	fbs = filter-branch -f --prune-empty --subdirectory-filter
+	fbt = filter-branch -f --prune-empty --tree-filter
+	pack = !git reset --hard && git for-each-ref --format='%(refname)' refs/original/ | xargs -n 1 git update-ref -d && git reflog expire --expire=now --all && git gc --aggressive --prune=now
+	ghr = "!ghr() { git remote set-url origin https://github.com/$1 && git remote set-url --push origin git@github.com:$1; }; ghr"
+
+# machine-specific overrides (not tracked); a missing file is ignored
+[include]
+	path = ~/.gitconfig.local

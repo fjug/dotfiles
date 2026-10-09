@@ -4,9 +4,14 @@
 #   ╭─ user@host  ~/path  (git-branch) (python-venv)
 #   ╰─$
 # The conda module is deliberately absent; uv/venv is what shows up instead.
+#
+# Shared by macOS and Linux, zsh and bash. The $conda segment is kept in the
+# format for the Linux/VDI machines that still use conda (starship owns PS1,
+# so conda's own "(env)" prefix would otherwise be lost); on a conda-free
+# machine it renders nothing, so there is no cost to carrying it here.
 
 format = """
-[╭─](bold)$username$hostname$directory$git_branch$git_status$python$cmd_duration
+[╭─](bold)$username$hostname$directory$git_branch$git_status$python$conda$cmd_duration
 [╰─](bold)$character"""
 
 add_newline = true
@@ -64,9 +69,12 @@ style = "bold yellow"
 success_symbol = "[\\$](bold)"
 error_symbol = "[\\$](bold red)"
 
-# Off: noise for this workflow.
 [conda]
-disabled = true
+format = "[\\($environment\\)]($style) "
+style = "bold cyan"
+ignore_base = true
+
+# Off: noise for this workflow.
 [nodejs]
 disabled = true
 [package]
