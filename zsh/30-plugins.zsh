@@ -14,7 +14,12 @@ zplug() {
     print -P "%F{yellow}installing zsh plugin $repo...%f"
     command git clone --depth=1 -q "https://github.com/$repo.git" "$dir" || return 1
   fi
-  source "$dir/${file:-$name.zsh}"
+  # A half-finished clone (interrupted, or a repo that moved its entry point)
+  # leaves the directory present but the file missing; sourcing it would throw
+  # on every shell start.
+  local f="$dir/${file:-$name.zsh}"
+  [[ -r $f ]] || { print -u2 "zsh plugin $name: $f missing"; return 1; }
+  source "$f"
 }
 
 zplug zsh-users/zsh-autosuggestions

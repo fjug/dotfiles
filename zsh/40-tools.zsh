@@ -5,7 +5,9 @@
 # Prompt -----------------------------------------------------------------------
 if command -v starship >/dev/null 2>&1; then
   export STARSHIP_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/starship.toml"
-  eval "$(starship init zsh)"
+  # No "scan timed out" warnings on a throttled machine or an NFS home.
+  export STARSHIP_LOG=error
+  _cached_init starship "$(command -v starship) $STARSHIP_CONFIG" _starship_init_zsh
 else
   # Minimal fallback prompt: user@host, cwd, git branch.
   autoload -Uz vcs_info
@@ -18,13 +20,14 @@ fi
 
 # Directory jumping — replaces the old cwd/swd/lwd bookmark functions ----------
 if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init zsh)"   # provides `z` and `zi`
+  # provides `z` and `zi`
+  _cached_init zoxide "$(command -v zoxide)" zoxide init zsh
 fi
 
 # Fuzzy finder -----------------------------------------------------------------
 # Ctrl-R history, Ctrl-T files, Alt-C cd.
 if command -v fzf >/dev/null 2>&1; then
-  source <(fzf --zsh) 2>/dev/null
+  _cached_init fzf "$(command -v fzf)" fzf --zsh
   export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --info=inline'
   if command -v fd >/dev/null 2>&1; then
     export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
@@ -42,15 +45,12 @@ if command -v bat >/dev/null 2>&1; then
 fi
 
 # uv — the one and only Python toolchain ---------------------------------------
+# Completions for uv and uvx are generated to fpath files in
+# zsh/20-completion.zsh, not eval'd here.
 if command -v uv >/dev/null 2>&1; then
-  eval "$(uv generate-shell-completion zsh)" 2>/dev/null
-  eval "$(uvx --generate-shell-completion zsh)" 2>/dev/null
   # Let uv manage interpreters; never fall back to a system python silently.
   export UV_PYTHON_PREFERENCE=managed
 fi
-
-# gh ---------------------------------------------------------------------------
-command -v gh >/dev/null 2>&1 && eval "$(gh completion -s zsh)" 2>/dev/null
 
 # ssh-agent --------------------------------------------------------------------
 # Replaces the oh-my-zsh ssh-agent plugin. On macOS the keychain holds the

@@ -53,6 +53,13 @@ if [ -z "${LANG:-}" ] && [ -z "${LC_ALL:-}" ]; then
   fi
 fi
 
+# --- ollama ------------------------------------------------------------------
+# Read by the ollama server process, so these must be exported: as plain shell
+# assignments they stayed local to the shell and ollama never saw them. Inert
+# on a machine without ollama, so they live here rather than in a .local file.
+export OLLAMA_MAX_LOADED_MODELS=1
+export OLLAMA_KEEP_ALIVE=15m
+
 # --- misc --------------------------------------------------------------------
 # indent XML with tabs
 XMLLINT_INDENT='	'
