@@ -1,5 +1,7 @@
 # dotfiles
 
+[![ci](https://github.com/fjug/dotfiles/actions/workflows/ci.yml/badge.svg)](https://github.com/fjug/dotfiles/actions/workflows/ci.yml)
+
 Florian Jug's shell and tool configuration — macOS and Linux, zsh and bash,
 from one tree.
 
@@ -96,6 +98,26 @@ checkout on a machine without it.
 **Nothing is version pinned, except where it must be.** The Brewfile lists
 names. `install/linux-tools.sh` pins version *and* SHA-256, because it
 downloads release binaries over the network.
+
+## Changing something
+
+```bash
+install/selftest.sh
+```
+
+Parses every file under every shell that reads it — including the bash 3.2
+macOS ships — runs `link.sh` against a throwaway `$HOME`, starts zsh and both
+bashes interactively and fails on any error they print, then runs `doctor.sh`.
+CI runs this exact script on ubuntu and macOS, so a green badge means what a
+green local run means.
+
+It exists because the two things that have actually broken here were invisible
+locally: a shared file that stopped parsing in one shell, and
+`shopt -s autocd` erroring only on macOS's bash 3.2, which silently cost
+`/bin/bash` its prompt, zoxide and fzf.
+
+After upgrading tools by hand, `dotfiles-clear-cache` drops the generated init
+code and completions so the next shell regenerates them.
 
 ## Everyday commands
 
