@@ -1,3 +1,6 @@
+# Legacy conda location; only used if it exists (the VDI's conda lives in
+# /localscratch/miniconda3 and is initialised at the end of bashrc).
+if [ -x "$HOME/miniconda3/bin/conda" ]; then
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/home/florian.jug/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
@@ -12,4 +15,4 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
-
+fi

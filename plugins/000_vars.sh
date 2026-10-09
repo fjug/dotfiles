@@ -1,11 +1,13 @@
 # use vim to edit commit messages
 export EDITOR=vim
 export VISUAL="$EDITOR"
+export PAGER=less
 
 # --== Homebrew ==--
 
-if [ -x "$(which brew 2> /dev/null)" ]; then
-	export BREW="$(brew --prefix)"
+# (bashrc already sets BREW on macOS; avoid the slow 'brew --prefix' call)
+if [ -z "$BREW" ] && [ -n "$HOMEBREW_PREFIX" ]; then
+	export BREW="$HOMEBREW_PREFIX"
 fi
 
 # --== CVS ==--
@@ -24,8 +26,9 @@ export SPHINXOPTS=-W
 
 # --== less ==--
 
+# raw colours, quit if one screen, don't clear the screen on exit
+export LESS='-R -F -X'
 # enable syntax highlighting in less
-export LESS=' -R '
 if [ -d /usr/share/source-highlight ]; then
 	export LESSOPEN="| /usr/share/source-highlight/src-hilite-lesspipe.sh %s"
 elif [ -d $HOME/brew/Cellar/source-highlight ]; then
