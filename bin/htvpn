@@ -1,0 +1,44 @@
+#!/bin/bash
+# htvpn: connect to the HT VPN with openfortivpn, open the SSO sign-in page in
+# the background, and reconnect after drops. macOS only.
+#
+# Replaces FortiClient for daily use: HT disables FortiClient's "Always Up"
+# centrally, while openfortivpn --persistent keeps retrying. Profile values
+# come from /Library/Application Support/Fortinet/FortiClient/conf/vpn.plist.
+#
+# sudo needs admin rights, which HT grants for 30 min through the Jamf
+# Self Service+ policy "Allow_Admin_User_30min" (id 61, also `adminme`).
+# If they are not active, the script requests them and waits.
+
+GATEWAY="vpn.fht.org:443"
+ADMIN_POLICY="jamfselfservice://content?entity=policy&id=61&action=execute"
+
+is_admin() { dseditgroup -o checkmember -m "$USER" admin >/dev/null 2>&1; }
+
+if ! is_admin; then
+  echo "Requesting 30 min admin rights from HT Self Service..."
+  open -g "$ADMIN_POLICY"
+  for i in $(seq 60); do
+    is_admin && break
+    if [ "$i" -eq 10 ]; then
+      # Not granted after 20 s: bring Self Service forward in case it
+      # needs a click on "Enable".
+      open "$ADMIN_POLICY"
+    fi
+    sleep 2
+  done
+  if ! is_admin; then
+    echo "No admin rights after 2 min. Enable Allow_Admin_User_30min in HT Self Service, then run htvpn again." >&2
+    exit 1
+  fi
+fi
+
+sudo -v || exit 1
+sudo openfortivpn "$GATEWAY" --saml-login --persistent=10 2>&1 |
+while IFS= read -r line; do
+  printf '%s\n' "$line"
+  if [[ $line =~ Authenticate\ at\ \'([^\']+)\' ]]; then
+    open -g "${BASH_REMATCH[1]}"
+    osascript -e 'display notification "Sign in to reconnect" with title "HT VPN"'
+  fi
+done

@@ -52,6 +52,9 @@ brew "ffmpeg"
 brew "pandoc"
 brew "librsvg"
 
+# --- network ----------------------------------------------------------------
+brew "openfortivpn"             # HT VPN with auto-reconnect; see bin/htvpn
+
 # --- casks ------------------------------------------------------------------
 cask "meld"                     # GUI diff/merge, wired up in .gitconfig
 cask "claude-code"
