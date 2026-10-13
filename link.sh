@@ -35,7 +35,9 @@ link "$DOTFILES/config/bat/config"    "$CFG/bat/config"
 if is_macos; then
   link "$DOTFILES/KeyBindings/DefaultKeyBinding.dict" \
        "$HOME/Library/KeyBindings/DefaultKeyBinding.dict"
-  # HT VPN with auto-reconnect (needs `brew install openfortivpn`)
+  # HT: 30-min admin rights from Jamf Self Service, and the VPN with
+  # auto-reconnect (needs `brew install openfortivpn`)
+  link "$DOTFILES/bin/adminme"     "$HOME/bin/adminme"
   link "$DOTFILES/bin/htvpn"       "$HOME/bin/htvpn"
 fi
 

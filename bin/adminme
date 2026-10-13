@@ -1,0 +1,43 @@
+#!/bin/bash
+# adminme: get HT's 30-minute admin rights from the terminal. macOS only.
+#
+# Triggers the Jamf Self Service+ policy "Allow_Admin_User_30min" (id 61),
+# waits until the account is in the admin group, quits the Self Service
+# window it opened, and exits 0. Exits 0 at once if the rights are already
+# active, and 1 if they have not arrived after $ADMINME_TIMEOUT seconds.
+
+POLICY_URL="jamfselfservice://content?entity=policy&id=61&action=execute"
+APP_ID="com.jamf.selfserviceplus"
+TIMEOUT="${ADMINME_TIMEOUT:-120}"
+
+is_admin() { dseditgroup -o checkmember -m "$USER" admin >/dev/null 2>&1; }
+app_running() {
+  [ "$(osascript -e "application id \"$APP_ID\" is running" 2>/dev/null)" = true ]
+}
+
+if is_admin; then
+  echo "Admin rights already active."
+  exit 0
+fi
+
+# Quit Self Service afterwards only if this script is what opened it.
+was_running=0
+app_running && was_running=1
+
+echo "Requesting 30 min admin rights from HT Self Service..."
+open -g "$POLICY_URL"
+
+start=$SECONDS
+until is_admin; do
+  if [ $((SECONDS - start)) -ge "$TIMEOUT" ]; then
+    echo "No admin rights after ${TIMEOUT} s. Check HT Self Service." >&2
+    exit 1
+  fi
+  sleep 1
+done
+
+if [ "$was_running" -eq 0 ]; then
+  osascript -e "tell application id \"$APP_ID\" to quit" >/dev/null 2>&1
+fi
+echo "Admin rights granted, until about $(date -v+30M +%H:%M)."
+exit 0

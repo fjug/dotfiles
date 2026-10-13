@@ -82,8 +82,6 @@ case "$OSTYPE" in
     alias ofd='open "$PWD"'                     # from the omz `macos` plugin
     alias showfiles='defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder'
     alias hidefiles='defaults write com.apple.finder AppleShowAllFiles -bool false && killall Finder'
-    # HT Self Service (Jamf): run "Allow_Admin_User_30min" without the UI
-    alias adminme='open -g "jamfselfservice://content?entity=policy&id=61&action=execute"'
     ;;
 esac
 
