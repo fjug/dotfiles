@@ -24,7 +24,7 @@ elif has brew; then
   brew install uv
 else
   info "installing uv via the official installer"
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
@@ -52,6 +52,8 @@ for t in "${tools[@]}"; do
   uv tool install --quiet "$t" && ok "$t" || warn "failed: $t"
 done
 
-uv tool update-shell 2>/dev/null || true
+# No `uv tool update-shell`: ~/.zshenv and ~/.bashrc are symlinks into this
+# repo, so it would append a hardcoded PATH line to tracked files. Both shells
+# already put ~/.local/bin on PATH (zsh/10-path.zsh, bash/10-path.bash).
 
 info "done — new project: \`uv init myproj && cd myproj && uv add numpy\`"
