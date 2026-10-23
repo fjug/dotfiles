@@ -1,0 +1,220 @@
+#!/bin/bash
+# kdrive-link: copy kDrive share links for files in your local kDrive folder.
+# macOS only.
+#
+#   kdrive-link <file>...   print a share link for each file and copy them all
+#                           to the clipboard; an existing link is reused,
+#                           otherwise a public link with download is created
+#   kdrive-link --setup     store your Infomaniak API token in the Keychain
+#   kdrive-link --id <file>  show drive and kDrive file id (no token needed)
+#   kdrive-link --gui ...   report through a notification or alert instead of
+#                           the terminal (what the Quick Action uses)
+#
+# This is the "kDrive: Copy share link" Quick Action, which works in any app
+# with a Services menu, Path Finder included. kDrive's own Finder menu cannot
+# appear there: Finder Sync extensions are loaded by Finder only.
+#
+# Local files are mapped to kDrive file ids through the kDrive app's own sync
+# database (local inode -> remote id), so nothing is searched online. A file
+# the app has not synced yet therefore has no link.
+#
+# Token: https://manager.infomaniak.com/v3/ng/accounts/token/list, scope "drive".
+
+set -u
+PATH=/usr/bin:/bin:/usr/sbin:/sbin          # Services run with a bare PATH anyway
+
+KC_SERVICE="kdrive-link"
+APPDIR="$HOME/Library/Application Support/kDrive"
+API="https://api.infomaniak.com"
+TOKEN_URL="https://manager.infomaniak.com/v3/ng/accounts/token/list"
+GUI=0
+
+# --- output ------------------------------------------------------------------
+
+osa_alert() {
+  osascript -e 'on run argv' \
+            -e 'display alert "kDrive link" message (item 1 of argv) as critical' \
+            -e 'end run' "$1" >/dev/null 2>&1
+}
+osa_note() {
+  osascript -e 'on run argv' \
+            -e 'display notification (item 2 of argv) with title (item 1 of argv)' \
+            -e 'end run' "$1" "$2" >/dev/null 2>&1
+}
+die() {
+  if [ "$GUI" = 1 ]; then osa_alert "$1"; else printf 'kdrive-link: %s\n' "$1" >&2; fi
+  exit 1
+}
+
+# --- setup -------------------------------------------------------------------
+
+setup() {
+  printf '%s\n' "Create a token with the \"drive\" scope here (opening it now):" \
+                "  $TOKEN_URL" \
+                "then paste it below. It goes into your login Keychain as \"$KC_SERVICE\"."
+  open "$TOKEN_URL"
+  # -w as the last argument makes `security` prompt, so the token never
+  # appears in a process listing or the shell history.
+  security add-generic-password -U -s "$KC_SERVICE" -a "$USER" \
+           -l "kDrive API token (kdrive-link)" -w \
+    && echo "Saved. Try: kdrive-link <some file in ~/kDrive>"
+}
+
+# --- helpers -----------------------------------------------------------------
+
+sq()   { printf %s "$1" | sed "s/'/''/g"; }                 # SQL string literal
+jget() { printf %s "$1" | plutil -extract "$2" raw -o - - 2>/dev/null; }
+
+# Snapshot the kDrive databases. The app holds them locked, so read an APFS
+# clone (instant, whatever the size) together with its write-ahead log.
+SNAP=""
+snapshot() {
+  SNAP="$(mktemp -d "${TMPDIR:-/tmp}/kdrive-link.XXXXXX")" || die "cannot create a temp folder"
+  trap 'rm -rf "$SNAP"' EXIT
+}
+clone_db() {   # <db path> -> path of the clone
+  local src="$1" dst="$SNAP/$(basename "$1")"
+  [ -f "$dst" ] && { printf %s "$dst"; return 0; }
+  cp -c "$src" "$dst" 2>/dev/null || cp "$src" "$dst" || return 1
+  [ -f "$src-wal" ] && { cp -c "$src-wal" "$dst-wal" 2>/dev/null || cp "$src-wal" "$dst-wal"; }
+  printf %s "$dst"
+}
+q() { sqlite3 -batch -noheader -separator $'\t' "$1" "$2" 2>/dev/null; }
+
+api() {   # <method> <path> [json body]   (token via stdin config, not argv)
+  if [ -n "${3:-}" ]; then
+    printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" |
+      curl -sS --max-time 20 -K - -X "$1" -H 'Content-Type: application/json' \
+           --data "$3" "$API$2"
+  else
+    printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" |
+      curl -sS --max-time 20 -K - -X "$1" "$API$2"
+  fi
+}
+api_error() { # best human-readable error from a response
+  local d; d="$(jget "$1" error.description)"; [ -n "$d" ] || d="$(jget "$1" error.code)"
+  printf %s "${d:-unexpected response from the kDrive API}"
+}
+
+# Absolute path with symlinked folders resolved (~/Desktop -> ~/kDrive/Mac/...)
+realpath_of() {
+  local d b; d="$(dirname "$1")"; b="$(basename "$1")"
+  d="$(cd "$d" 2>/dev/null && pwd -P)" || return 1
+  if [ -L "$d/$b" ] && [ -d "$d/$b" ]; then (cd "$d/$b" && pwd -P); else printf '%s/%s' "$d" "$b"; fi
+}
+
+# <real path> -> "driveId<TAB>remote file id", or fails
+remote_id() {
+  local real="$1" parms syncs line lp dbp drive db rel ino hit id name node part
+  parms="$(clone_db "$APPDIR/.parms.db")" || return 1
+  syncs="$(q "$parms" "SELECT s.localPath, s.dbPath, d.driveId FROM sync s JOIN drive d ON d.dbId = s.driveDbId;")"
+  while IFS=$'\t' read -r lp dbp drive; do
+    [ -n "$lp" ] || continue
+    case "$real/" in "$lp"/*) ;; *) continue ;; esac
+    db="$(clone_db "$dbp")" || return 1
+    rel="${real#"$lp"}"; rel="${rel#/}"
+    [ -n "$rel" ] || return 2                          # the kDrive folder itself
+
+    # 1. by inode, which survives renames and moves
+    ino="$(stat -f %i "$real")"
+    hit="$(q "$db" "SELECT nodeIdDrive, nameLocal FROM node WHERE nodeIdLocal = '$ino';")"
+    id="${hit%%$'\t'*}"; name="${hit#*$'\t'}"
+    if [ -n "$id" ] && [ "$name" = "$(basename "$real")" ]; then
+      printf '%s\t%s' "$drive" "$id"; return 0
+    fi
+
+    # 2. by path, for files an app replaced on save (new inode, same name)
+    node="$(q "$db" "SELECT nodeId FROM node WHERE parentNodeId IS NULL;")"
+    local IFS=/
+    set -f                                             # names may contain * or ?
+    for part in $rel; do
+      [ -n "$node" ] || break
+      node="$(q "$db" "SELECT nodeId FROM node WHERE parentNodeId = $node AND nameLocal = '$(sq "$part")';")"
+    done
+    set +f; unset IFS
+    if [ -n "$node" ]; then
+      id="$(q "$db" "SELECT nodeIdDrive FROM node WHERE nodeId = $node;")"
+      [ -n "$id" ] && { printf '%s\t%s' "$drive" "$id"; return 0; }
+    fi
+
+    # 3. inode hit whose name differs only in Unicode normalisation
+    [ -n "${hit%%$'\t'*}" ] && { printf '%s\t%s' "$drive" "${hit%%$'\t'*}"; return 0; }
+    return 3
+  done <<EOF
+$syncs
+EOF
+  return 4                                             # not in any synced folder
+}
+
+# <drive> <file id> -> share url
+share_url() {
+  local resp url
+  resp="$(api GET "/2/drive/$1/files/$2/link")" || return 1
+  url="$(jget "$resp" data.url)"
+  if [ -z "$url" ]; then
+    resp="$(api POST "/2/drive/$1/files/$2/link" '{"right":"public","can_download":true}')" || return 1
+    url="$(jget "$resp" data.url)"
+  fi
+  [ -n "${KDRIVE_LINK_DEBUG:-}" ] && printf '%s\n' "$resp" >&2
+  if [ -n "$url" ]; then printf %s "$url"; else api_error "$resp"; return 1; fi
+}
+
+# --- main --------------------------------------------------------------------
+
+case "${1:-}" in
+  --setup) setup; exit $? ;;
+  --gui)   GUI=1; shift ;;
+  -h|--help|"") sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+[ $# -gt 0 ] || die "no files given"
+[ -d "$APPDIR" ] || die "the kDrive app does not seem to be set up on this Mac"
+
+if [ "$1" = --id ]; then
+  shift; snapshot
+  for f in "$@"; do
+    real="$(realpath_of "$f")" || { echo "$f: not found"; continue; }
+    ids="$(remote_id "$real")" && printf 'drive %s  file %s	%s
+' "${ids%%$'	'*}" "${ids#*$'	'}" "$f"       || echo "$f: no kDrive id (rc=$?)"
+  done
+  exit 0
+fi
+
+TOKEN="$(security find-generic-password -s "$KC_SERVICE" -a "$USER" -w 2>/dev/null)"
+[ -n "$TOKEN" ] || die "No kDrive API token yet. Run this once in Terminal: kdrive-link --setup"
+
+snapshot
+links=""; names=""; failed=""
+for f in "$@"; do
+  base="$(basename "$f")"
+  real="$(realpath_of "$f")" || { failed="$failed\n$base: not found"; continue; }
+  ids="$(remote_id "$real")"; rc=$?
+  case $rc in
+    0) ;;
+    2) failed="$failed\n$base: that is the kDrive folder itself"; continue ;;
+    3) failed="$failed\n$base: not synced to kDrive yet"; continue ;;
+    4) failed="$failed\n$base: not inside your kDrive folder"; continue ;;
+    *) failed="$failed\n$base: could not read the kDrive app's database"; continue ;;
+  esac
+  url="$(share_url "${ids%%$'\t'*}" "${ids#*$'\t'}")" \
+    || { failed="$failed\n$base: $url"; continue; }
+  links="${links:+$links
+}$url"
+  names="${names:+$names, }$base"
+  [ "$GUI" = 1 ] || printf '%s\t%s\n' "$url" "$base"
+done
+
+if [ -n "$links" ]; then
+  printf %s "$links" | pbcopy
+  n="$(printf '%s\n' "$links" | wc -l | tr -d ' ')"
+  if [ "$GUI" = 1 ]; then
+    if [ "$n" = 1 ]; then osa_note "kDrive link copied" "$names"
+    else osa_note "$n kDrive links copied" "$names"; fi
+  fi
+fi
+if [ -n "$failed" ]; then
+  msg="$(printf '%b' "${failed#\\n}")"
+  [ -n "$links" ] && msg="Copied the others. These failed:
+$msg"
+  die "$msg"
+fi
+exit 0

@@ -39,6 +39,10 @@ if is_macos; then
   # auto-reconnect (needs `brew install openfortivpn`)
   link "$DOTFILES/bin/adminme"     "$HOME/bin/adminme"
   link "$DOTFILES/bin/htvpn"       "$HOME/bin/htvpn"
+  # kDrive share links from any app's Services menu (Path Finder included)
+  link "$DOTFILES/bin/kdrive-link" "$HOME/bin/kdrive-link"
+  link "$DOTFILES/Services/kDrive - Copy share link.workflow" \
+       "$HOME/Library/Services/kDrive - Copy share link.workflow"
 fi
 
 # --- stale symlinks from older layouts ---------------------------------------
